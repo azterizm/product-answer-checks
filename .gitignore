@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+
+# Icecat downloads: local only until the Open Content Licence is read and the publication rule is fixed
+data/
+
+# Raw run output: model answers, prompts and timings (summaries are committed under results/)
+results/raw/
+
+# API keys
+.env
+*.key
+
+# Internal working files: agent instructions and the progress log stay local
+CLAUDE.md
+docs/ROADMAP.md
