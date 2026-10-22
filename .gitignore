@@ -27,3 +27,6 @@ results/raw/
 # Internal working files: agent instructions and the progress log stay local
 CLAUDE.md
 docs/ROADMAP.md
+
+# Router key (when kept here)
+.router_key

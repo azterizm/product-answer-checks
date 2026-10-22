@@ -63,7 +63,7 @@ python_version = "3.11"
 strict = true
 warn_unreachable = true
 mypy_path = "src"
-files = ["src", "tests"]
+files = ["src", "tests", "scripts"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
