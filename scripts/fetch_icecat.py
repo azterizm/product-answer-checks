@@ -40,9 +40,9 @@ DRAW = DATA / "draw.jsonl"
 SEAL = ROOT / "battery/seal.json"
 LOW, HIGH = 90_000_000, 135_000_000
 MAX_DRAWS = 40_000
-WORKERS = 8
-PAUSE = 0.2  # seconds per request per worker: with the replies, about 10 requests a second in all
-BATCH = 400
+WORKERS = 32  # about 40 requests a second, under the fair-use 50 (your choice, 2026-10-22)
+PAUSE = 0.0
+BATCH = 2000
 FINAL = {
     "eligible",
     "no English sheet",
@@ -155,6 +155,24 @@ def candidates(records: Mapping[int, Mapping[str, Any]]) -> list[Candidate]:
     return out
 
 
+def stopping_point(records: Mapping[int, Mapping[str, Any]]) -> tuple[dict[int, Any], Selection]:
+    """The draw as METHOD §1 reads it: the unbroken prefix, cut at the first draw that completes
+    the battery, so a fetch that ran past it (in parallel batches) changes nothing."""
+    prefix: dict[int, Any] = {}
+    for n in range(len(records)):
+        if n not in records:
+            break
+        prefix[n] = records[n]
+    selection = select(candidates(prefix))
+    if selection.complete:
+        for n in sorted(k for k, r in prefix.items() if r["status"] == "eligible"):
+            head = {k: r for k, r in prefix.items() if k <= n}
+            first = select(candidates(head))
+            if first.complete:
+                return head, first
+    return prefix, selection
+
+
 def progress(selection: Selection) -> str:
     sizes = " ".join(f"{t}{len(ids)}" for t, ids in selection.types.items())
     companions = sum(map(len, selection.companions.values()))
@@ -178,13 +196,7 @@ def draw() -> Selection:
                     log.write(json.dumps(record, ensure_ascii=False) + "\n")
                 records[record["n"]] = record
             log.flush()
-            # Selection reads the draw in order, so only a complete prefix counts.
-            prefix = {}
-            for n in range(len(records) + 1):
-                if n not in records:
-                    break
-                prefix[n] = records[n]
-            selection = select(candidates(prefix))
+            prefix, selection = stopping_point(records)
             counts = Counter(r["status"] for r in prefix.values())
             print(
                 f"{len(prefix)} drawn, {counts['eligible']} eligible: {progress(selection)}",

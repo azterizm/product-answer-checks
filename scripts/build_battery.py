@@ -25,7 +25,7 @@ import fetch_icecat as fi  # type: ignore[import-not-found]  # noqa: E402
 
 from product_answer_checks import battery as bt  # noqa: E402
 from product_answer_checks import sheets as sh  # noqa: E402
-from product_answer_checks.selection import MIN_BATTERY, Selection, select  # noqa: E402
+from product_answer_checks.selection import MIN_BATTERY, Selection  # noqa: E402
 
 BATTERY = ROOT / "battery"
 PRODUCTS = BATTERY / "products.jsonl"
@@ -37,13 +37,7 @@ SEAL = fi.SEAL
 
 
 def selection() -> tuple[Selection, dict[str, Any]]:
-    records = fi.read_draw()
-    prefix = {}
-    for n in range(len(records)):
-        if n not in records:
-            break
-        prefix[n] = records[n]
-    out = select(fi.candidates(prefix))
+    prefix, out = fi.stopping_point(fi.read_draw())
     counts = Counter(r["status"] for r in prefix.values())
     return out, {"drawn": len(prefix), "statuses": dict(sorted(counts.items()))}
 

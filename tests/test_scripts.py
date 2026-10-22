@@ -51,3 +51,12 @@ def test_the_claim_check_runner_reads_a_french_listing() -> None:
         check=True,
     )
     assert json.loads(out.stdout)["verdicts"] == ["EMIT", "ROLLBACK"]
+
+
+def test_the_draw_is_read_up_to_its_first_gap() -> None:
+    from scripts import fetch_icecat  # noqa: PLC0415
+
+    rows = {n: {"n": n, "id": n, "status": "category"} for n in (0, 1, 2, 4)}
+    prefix, selection = fetch_icecat.stopping_point(rows)
+    assert sorted(prefix) == [0, 1, 2]
+    assert not selection.complete

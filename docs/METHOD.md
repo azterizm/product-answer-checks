@@ -15,7 +15,7 @@ accepted by the account holder). Each product is fetched in English and in Frenc
 
 **Draw.** Icecat IDs drawn uniformly from [90,000,000, 135,000,000) with `random.Random(20261022)`, in draw order,
 until the battery is full or 40,000 IDs are drawn. The range holds the recent catalogue (about 4 % of IDs are Open
-Icecat products in a probe of 300). Requests: at most 8 at a time, about 10 per second, under the fair-use 50.
+Icecat products in a probe of 300). Requests: at most 32 at a time, about 40 per second, under the fair-use 50 (see Changes).
 
 **Eligible** when all hold:
 
@@ -160,3 +160,6 @@ about $1. Neither runs before your spend go.
 - 2026-10-22, before any download: category words match at the start of a word; the order in which types B, C,
   A and D are filled, and what a numeric feature is, made exact; type B's traps and D's out-of-stock offer stated;
   French offers use no-break spaces.
+- 2026-10-22, during the draw (7,718 IDs drawn, none used): requests at up to 32 at a time, about 40 a second,
+  still under the fair-use 50, by your choice. The battery is read from the draw cut at the first ID that
+  completes it, so the faster, batched fetch gives the same products as a one-at-a-time draw.
