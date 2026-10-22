@@ -200,3 +200,7 @@ about $1. Neither runs before your spend go.
     a range (counted right, then wrong), not waited on; your 60 random checks become optional.
 - 2026-10-22, after the runs: the verifier released as 0.3.0 (its code is `66450a6`, the build every arm ran on);
   `pyproject.toml` now asks for `legal-rag-verifier>=0.3.0` from PyPI instead of the local commit.
+- 2026-10-22, your hand grades: 52 of the 60 random sentences (26 per generator) and 2 of the 4 the graders left
+  open. You agree with the graders on 50 of 52 (26 of 26 on Flash's answers, 24 of 26 on Opus 4.6's; the two
+  differences go opposite ways). As fixed in §7, the random sentences check the graders and do not replace their
+  grades; your grades decide the 2 open sentences. 2 stay open, both from Opus 4.6, reported as ranges.
