@@ -115,7 +115,7 @@ def arm_rows(gen: str, arm: str | None, lang: str, *, price_only: bool = False) 
             out.append((r["qid"], r["sentences"], [v == "EMIT" for v in r["verdicts"]], added))
     out = [o for o in out if o[0].endswith(f"-{lang}")]
     if price_only:
-        priced = []
+        priced: list[Row] = []
         for qid, ss, kept, t in out:
             pairs = [(s, k) for s, k in zip(ss, kept, strict=True) if is_price(s)]
             priced.append((qid, [s for s, _ in pairs], [k for _, k in pairs], t))
