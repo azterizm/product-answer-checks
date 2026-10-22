@@ -15,8 +15,6 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
-import router  # type: ignore[import-not-found]
-
 from legal_rag_verifier.verifier import NLIProbs, VerifierConfig
 
 LABELS = ("supported", "contradicted", "not_stated")
@@ -146,6 +144,8 @@ def one_hot(label: str, passage: int, n: int) -> list[NLIProbs]:
 
 
 def router_chat(model: str) -> Callable[[list[dict[str, str]]], dict[str, Any]]:
+    import router  # type: ignore[import-not-found]  # noqa: PLC0415 - not needed in arm 3's container
+
     def chat(messages: list[dict[str, str]]) -> dict[str, Any]:
         out = router.chat(model, messages)
         return {**out, "tokens": out["usage"].get("completion_tokens")}
