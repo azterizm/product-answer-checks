@@ -41,7 +41,7 @@ SEAL = ROOT / "battery/seal.json"
 LOW, HIGH = 90_000_000, 135_000_000
 MAX_DRAWS = 40_000
 WORKERS = 8
-PAUSE = 0.8  # seconds per request per worker: about 10 requests a second in all
+PAUSE = 0.2  # seconds per request per worker: with the replies, about 10 requests a second in all
 BATCH = 400
 FINAL = {
     "eligible",
