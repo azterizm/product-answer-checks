@@ -9,14 +9,14 @@ Measures what it costs to check AI shopping answers against product listings, an
 Two models answered 120 product questions. Each question came with a product listing and shop offers. Half of
 the listings were in French, half in English. Each answer was checked in four ways.
 
-Claude Opus 4.6: 288 sentences, 32 to 34 wrong.
+Claude Opus 4.6: 288 sentences, 32 wrong.
 
 | Check | Wrong sentences kept | Wrong prices kept | Correct sentences removed | Time added per answer |
 |---|---|---|---|---|
-| No check | 32 to 34 | 13 to 15 | 0 | 0 |
-| Second model checks each sentence, Gemini 3.8 Flash | 0 | 0 | 92 to 94 | 12.6 s |
-| Claim check of prices, dates and units | 21 to 23 | 3 to 5 | 106 | 6 ms |
-| Claim check, then a 1B model | 5 to 7 | 2 to 4 | 148 | 0.13 s |
+| No check | 32 | 13 | 0 | 0 |
+| Second model checks each sentence, Gemini 3.8 Flash | 0 | 0 | 94 | 12.6 s |
+| Claim check of prices, dates and units | 21 | 3 | 106 | 6 ms |
+| Claim check, then a 1B model | 5 | 2 | 148 | 0.13 s |
 
 Gemini 3.8 Flash: 262 sentences, none wrong.
 
@@ -55,13 +55,12 @@ and on one GPU for the Flash answers. The claim check ran on a laptop CPU. The 1
 - Offers are constructed. Icecat has no prices.
 - Products are limited to electronics, computing and appliances.
 - Questions and answers are in English. Each model answered once.
-- Two models graded the sentences, Gemini 3.8 Flash and Qwen 27B. They agreed on 546 of 550. A person graded 2 of
-  the other 4 and checked 52 random sentences, agreeing with the models on 50. The 2 open sentences are shown as
-  ranges. Flash also graded its own answers.
+- Two models graded the sentences, Gemini 3.8 Flash and Qwen 27B. They agreed on 546 of 550. A person graded the
+  other 4 and checked 52 random sentences, agreeing with the models on 50. Flash also graded its own answers.
 - The second model check used a different model for each answer set. Its times do not compare between the two
   tables.
 - The 1B model was trained on UK legislation, not on product text.
-- There are few wrong sentences, 32 to 34, all from one model.
+- There are few wrong sentences, 32, all from one model.
 - This is not a test of any company's production system.
 
 ## Reproduce

@@ -204,3 +204,7 @@ about $1. Neither runs before your spend go.
   open. You agree with the graders on 50 of 52 (26 of 26 on Flash's answers, 24 of 26 on Opus 4.6's; the two
   differences go opposite ways). As fixed in §7, the random sentences check the graders and do not replace their
   grades; your grades decide the 2 open sentences. 2 stay open, both from Opus 4.6, reported as ranges.
+- 2026-10-22, the last 2 open sentences: Q083A1 and Q093B1, Opus 4.6 on A10 in English and in French, the same
+  claim ("The cheapest option including shipping is Shop C ... for a total of €133.99"; the cheaper Shop D is out of
+  stock, said in the answer's next sentence). You graded both right, after the report with them as ranges was
+  published. Every count is now one number; the reading rule is unchanged (false on both generators).
