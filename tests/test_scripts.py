@@ -75,7 +75,12 @@ def test_the_report_counts_wrong_kept_and_right_removed() -> None:
     rows = [("A01-fr", ["Right.", "Wrong.", "Odd."], [False, True, True], 0.5)]
     grades = {("A01-fr", "Right."): "yes", ("A01-fr", "Wrong."): "no"}
     out = report.tally(rows, grades)
-    assert (out["right_removed"], out["wrong_kept"], out["ungraded"], out["empty"]) == (1, 1, 1, 0)
+    assert (out["right_removed"], out["wrong_kept"], out["unsettled_kept"], out["empty"]) == (
+        1,
+        1,
+        1,
+        0,
+    )
     assert report.is_price("It costs €279.99.")
     assert not report.is_price("It weighs 2 kg.")
 

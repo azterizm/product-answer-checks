@@ -31,8 +31,9 @@ ARMS = {
     "2b claim check 0.2.0": "claims-020",
     "3 claim check then 1B": "judge1b",
 }
+ARM1_JUDGE = {"opus46": "gemini-3.8-flash-high (router)", "flash": "qwen27-ar4 (one L40S)"}
 HARDWARE = {
-    "1 other model": "router (hosted model)",
+    "1 other model": "Opus 4.6's answers: Flash on the router; Flash's: Qwen 27B on one L40S",
     "2 claim check": "CPU (Apple Mac)",
     "2b claim check 0.2.0": "CPU (Apple Mac)",
     "3 claim check then 1B": "CPU, then one L40S",
@@ -52,7 +53,7 @@ Row = tuple[str, Sequence[str], Sequence[bool], float | None]
 def tally(rows: Iterable[Row], grades: Mapping[tuple[str, str], str]) -> dict[str, Any]:
     """Counts over answers given as (question id, sentences, kept flags, seconds added)."""
     names = ("answers", "sentences", "wrong_kept", "right_removed", "wrong_removed", "right_kept")
-    out: dict[str, Any] = dict.fromkeys((*names, "ungraded", "empty"), 0)
+    out: dict[str, Any] = dict.fromkeys((*names, "unsettled_kept", "unsettled_removed", "empty"), 0)
     seconds = []
     for qid, said, kept, added in rows:
         out["answers"] += 1
@@ -62,8 +63,8 @@ def tally(rows: Iterable[Row], grades: Mapping[tuple[str, str], str]) -> dict[st
             seconds.append(added)
         for s, k in zip(said, kept, strict=True):
             g = grades.get((qid, s))
-            if g not in {"yes", "no"}:
-                out["ungraded"] += 1
+            if g not in {"yes", "no"}:  # the graders never agreed: read the counts as a range
+                out["unsettled_kept" if k else "unsettled_removed"] += 1
             elif g == "no":
                 out["wrong_kept" if k else "wrong_removed"] += 1
             else:
@@ -123,9 +124,42 @@ def arm_rows(gen: str, arm: str | None, lang: str, *, price_only: bool = False) 
     return out
 
 
+def graders() -> dict[str, Any]:
+    """How the grades were settled, the graders' first-pass agreement per generator, and yours on
+    the random checks where you graded them."""
+    key = json.loads((gr.OUT / "key.json").read_text(encoding="utf-8"))
+    settled = gr.consensus()
+    first = {g: gr.done(g) for g in gr.GRADERS}
+    yours: dict[str, str] = {}
+    file = gr.OUT / "leftover.csv"
+    if file.exists():
+        with file.open(encoding="utf-8") as f:
+            yours = {r["item"]: r["correct"].strip().lower() for r in csv.DictReader(f)}
+    out: dict[str, Any] = {
+        "graders": list(gr.GRADERS),
+        "settled": {"first": 0, "again": 0, "unsettled": 0},
+    }
+    for v in settled.values():
+        out["settled"][v["by"] if v else "unsettled"] += 1
+    for gen in gr.GENERATORS:
+        codes = [k for k, v in key.items() if gen in v["answers"]]
+        sure = [k for k in codes if all(first[g].get(k) in {"yes", "no"} for g in gr.GRADERS)]
+        same = sum(len({first[g][k] for g in gr.GRADERS}) == 1 for k in sure)
+        checked = [k for k in codes if yours.get(k) in {"yes", "no"} and settled[k]]
+        out[gen] = {
+            "sentences": len(codes),
+            "first_pass_agree": same,
+            "first_pass_both_sure": len(sure),
+            "your_checks": len(checked),
+            "your_checks_agree": sum(yours[k] == settled[k]["grade"] for k in checked),
+        }
+    return out
+
+
 def report() -> dict[str, Any]:
     grades = final_grades()
-    out: dict[str, Any] = {"hardware": HARDWARE, "generators": {}}
+    out: dict[str, Any] = {"hardware": HARDWARE, "arm1_judge": ARM1_JUDGE, "grading": graders(),
+                           "generators": {}}  # fmt: skip
     for gen in gr.GENERATORS:
         table: dict[str, Any] = {}
         for lang in ("fr", "en"):
