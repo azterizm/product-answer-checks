@@ -11,12 +11,8 @@ authors = [{ name = "Abdullah Memon", email = "abdullah@memonsystems.com" }]
 license = "AGPL-3.0-only"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
-# The claim check under test. Pinned to the verifier commit with the French formats (stop 75);
-# moved to the 0.3.0 tag before test 1 runs.
-dependencies = ["legal-rag-verifier"]
-
-[tool.uv.sources]
-legal-rag-verifier = { git = "file:///Users/abdiel/Code/legal-rag-verifier", rev = "66450a6" }
+# The claim check under test: 0.3.0, whose code is the build test 1 ran on (verifier 66450a6).
+dependencies = ["legal-rag-verifier>=0.3.0"]
 
 [dependency-groups]
 dev = [

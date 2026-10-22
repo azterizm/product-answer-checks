@@ -62,11 +62,11 @@ def test_the_draw_is_read_up_to_its_first_gap() -> None:
     assert not selection.complete
 
 
-def test_the_arm_label_is_the_pinned_commit() -> None:
-    import tomllib  # noqa: PLC0415
+def test_the_claim_check_is_the_released_build() -> None:
+    from importlib.metadata import version  # noqa: PLC0415
 
-    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert pyproject["tool"]["uv"]["sources"]["legal-rag-verifier"]["rev"] == check.PINNED
+    assert version("legal-rag-verifier") == "0.3.0"
+    assert check.PINNED == "66450a6"
 
 
 def test_the_report_counts_wrong_kept_and_right_removed() -> None:

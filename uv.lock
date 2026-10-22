@@ -90,8 +90,12 @@ wheels = [
 
 [[package]]
 name = "legal-rag-verifier"
-version = "0.2.0"
-source = { git = "file:///Users/abdiel/Code/legal-rag-verifier?rev=66450a6#66450a6204daaf9f74ace2ea797653eaeb72e2ca" }
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/36/78/9205f418dd74928f29e3ed53c7256a472f04286eeb01699ba04ef55c682c/legal_rag_verifier-0.3.0.tar.gz", hash = "sha256:28282234465209caad58293343f440011b2063ebfa2969911bc07be78a174887", size = 491759, upload-time = "2026-10-22T12:57:56.833Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e3/86/22d56dddf7a80a7e0cb791b7aa9b8b4bf762f32a5dc9c3530f590347341c/legal_rag_verifier-0.3.0-py3-none-any.whl", hash = "sha256:e65a2a6cb54aa4d333e33d153d3dc4721f9dea08e6afcef96d8ea7aabcb4c120", size = 73476, upload-time = "2026-10-22T12:57:55.364Z" },
+]
 
 [[package]]
 name = "librt"
@@ -321,7 +325,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "legal-rag-verifier", git = "file:///Users/abdiel/Code/legal-rag-verifier?rev=66450a6" }]
+requires-dist = [{ name = "legal-rag-verifier", specifier = ">=0.3.0" }]
 
 [package.metadata.requires-dev]
 dev = [

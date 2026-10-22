@@ -35,7 +35,7 @@ from legal_rag_verifier.verifier import Verifier  # noqa: E402
 OUT = ROOT / "results/raw/checked"
 OTHER = {"flash": "opus46", "opus46": "flash"}
 OLD = "legal-rag-verifier==0.2.0"
-PINNED = "66450a6"  # pyproject.toml's pin; 0.2.0 reports its version wrongly ("0.1.0.dev0")
+PINNED = "66450a6"  # the build the runs used, released as 0.3.0; 0.2.0 reports its version wrongly
 _lock = threading.Lock()
 
 

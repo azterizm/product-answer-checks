@@ -198,3 +198,5 @@ about $1. Neither runs before your spend go.
   - **A second grader:** Qwen 27B grades all 550 sentences on the same server, in Opus 5.5's place in the
     two-grader flow (first pass; both again, reason first, where they differ). What still differs is reported as
     a range (counted right, then wrong), not waited on; your 60 random checks become optional.
+- 2026-10-22, after the runs: the verifier released as 0.3.0 (its code is `66450a6`, the build every arm ran on);
+  `pyproject.toml` now asks for `legal-rag-verifier>=0.3.0` from PyPI instead of the local commit.

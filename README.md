@@ -32,7 +32,7 @@ Gemini 3.8 Flash, 120 answers, 262 sentences, none wrong (one unsettled):
 - The 1B judge after it catches most of the rest, at 0.13 s, but removes the most right sentences. By the
   reading rule fixed beforehand (at most 2 more wrong sentences kept than the second model, and fewer right
   sentences removed), it does not cost less for the same safety, on either generator.
-- French listings: the claim check (verifier `66450a6`, with the French formats) removes about as many right
+- French listings: the claim check (`legal-rag-verifier` 0.3.0, with the French formats) removes about as many right
   sentences on the French half as on the English (36 and 38 on Flash's answers, 51 and 54 on Opus 4.6's). The
   release before it (0.2.0) removed 74 and 88 on the French half.
 
