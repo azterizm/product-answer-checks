@@ -182,3 +182,5 @@ about $1. Neither runs before your spend go.
     arm 2 (CPU).
   - **Spend caps:** Opus 5.5 at $10 in this repo's router ledger; Modal at $3 in its own ledger. A call that could
     pass either cap is not made.
+- 2026-10-22, after arm 3's dev smoke run, before the battery: arm 3 checks one answer at a time in the container,
+  so an answer's time is not shared with others' calls (the dev run at 8 at a time gave 360 ms per call).

@@ -33,7 +33,7 @@ SAMPLING = {"temperature": 0, "max_tokens": 1024, "seed": 0}
 TEMPLATE = {"enable_thinking": False}
 PORT = 30000
 GPU = "L40S"
-WORKERS = 8
+WORKERS = 1  # one answer at a time, so each answer's time is not shared (METHOD, Changes)
 CHUNK = 60
 # Modal spend as the verifier's modal_ledger.py: list prices plus 15 %, a hard cap (METHOD).
 LEDGER = ROOT / "results/raw/modal_ledger.json"
