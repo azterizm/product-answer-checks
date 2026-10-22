@@ -38,7 +38,8 @@ from legal_rag_verifier.segmenter import split_sentences  # noqa: E402
 
 OUT = ROOT / "results/raw/grading"
 GRADES = ("yes", "no", "unsure")
-GRADERS = ("opus55", "flash")
+# Flash alone since 2026-10-22: Opus 5.5 down at the router (HTTP 503), by your choice (METHOD).
+GRADERS: tuple[str, ...] = ("flash",)
 MODELS = {"opus55": router.OPUS55, "flash": router.GEMINI}
 GENERATORS = ("flash", "opus46")
 SHEET_SEED = 20261022
@@ -137,6 +138,8 @@ def done(grader: str, *, again: bool = False) -> dict[str, str]:
 
 
 def open_items() -> list[str]:
+    if len(GRADERS) == 1:  # one grader: what it marks unsure goes to you, not to a second pass
+        return []
     first = [done(g) for g in GRADERS]
     return [k for k in first[0] if not (first[0][k] == first[1].get(k) != "unsure")]
 
@@ -208,12 +211,19 @@ def grade(grader: str, *, again: bool = False) -> None:
 
 
 def consensus() -> dict[str, dict[str, Any]]:
-    """Agreed grades: the first pass where both say the same (not unsure), else the second."""
+    """Agreed grades: the first pass where both say the same (not unsure), else the second. With
+    one grader (as the verifier's stop 71), its grade unless unsure."""
     first = [done(g) for g in GRADERS]
     second = [done(g, again=True) for g in GRADERS]
     key = json.loads((OUT / "key.json").read_text(encoding="utf-8"))
     out: dict[str, dict[str, Any]] = {}
     for k in key:
+        if len(GRADERS) == 1:
+            g = first[0].get(k)
+            if g is None:
+                raise SystemExit(f"{k} has not been graded yet")
+            out[k] = {"grade": g, "by": "first"} if g != "unsure" else {}
+            continue
         a, b = first[0].get(k), first[1].get(k)
         if a is None or b is None:
             raise SystemExit(f"{k} has not been graded by both yet")
@@ -263,7 +273,13 @@ def leftover() -> None:
         writer = csv.DictWriter(f, fieldnames=["item", "why", "correct", "note"])
         writer.writeheader()
         for k in sorted(left | sample):
-            why = "graders differ" if k in left else "random check"
+            why = (
+                "grader unsure"
+                if k in left and len(GRADERS) == 1
+                else "graders differ"
+                if k in left
+                else "random check"
+            )
             writer.writerow({"item": k, "why": why, "correct": "", "note": ""})
     by = {"first": 0, "again": 0}
     for v in settled.values():

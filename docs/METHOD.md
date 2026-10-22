@@ -125,9 +125,9 @@ The 1B judge is used as published; it has never seen a product sentence, and is 
 
 ## 7. Grading
 
-- Claude Opus 5.5 and Gemini 3.8 Flash grade every sentence of arm 0 against the question, the listings and the
-  offers: **right**, **wrong** or **unsure** (the verifier's `live68_grade.py` flow, copied; see Changes). A
-  price sentence is one with "€", "EUR" or "euro".
+- Gemini 3.8 Flash grades every sentence of arm 0 against the question, the listings and the offers: **right**,
+  **wrong** or **unsure** (the verifier's `live68_grade.py` flow, copied; Opus 5.5 was planned as a second grader,
+  see Changes). A price sentence is one with "€", "EUR" or "euro".
 - **Wrong:** it states something the listings and offers do not support, or contradicts them. A sentence that
   gives a struck-through price as the current price is wrong. A total that leaves out shipping when the question
   asks for the delivered price is wrong.
@@ -184,3 +184,8 @@ about $1. Neither runs before your spend go.
     pass either cap is not made.
 - 2026-10-22, after arm 3's dev smoke run, before the battery: arm 3 checks one answer at a time in the container,
   so an answer's time is not shared with others' calls (the dev run at 8 at a time gave 360 ms per call).
+- 2026-10-22, during grading: Opus 5.5 returned HTTP 503 at the router from 15:03 and graded nothing. By your
+  choice Flash is the only grader, in the flow's one-grader mode (the verifier's stop 71): its grade stands; what it
+  marks unsure goes to you, with the 30 random sentences per generator, which are now the only check on the
+  grader. Flash grades its own answers as well as Opus 4.6's; the report gives your agreement with it per
+  generator. No Opus 5.5 call was made or paid for.
