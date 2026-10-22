@@ -35,6 +35,7 @@ from legal_rag_verifier.verifier import Verifier  # noqa: E402
 OUT = ROOT / "results/raw/checked"
 OTHER = {"flash": "opus46", "opus46": "flash"}
 OLD = "legal-rag-verifier==0.2.0"
+PINNED = "66450a6"  # pyproject.toml's pin; 0.2.0 reports its version wrongly ("0.1.0.dev0")
 _lock = threading.Lock()
 
 
@@ -90,12 +91,10 @@ def claims(set_: str, name: str, *, old: bool) -> None:
         job = by_qid[out["qid"]]
         rows.append({**checked(answers[out["qid"]], job["sentences"], out["verdicts"]),
                      "reasons": out["reasons"], "check_seconds": out["seconds"],
-                     "verifier": out["version"]})  # fmt: skip
+                     "verifier": "0.2.0" if old else PINNED})  # fmt: skip
     arm = "claims-020" if old else "claims"
     write(set_, arm, name, rows)
-    print(
-        f"{set_} {arm} {name}: {len(rows)} answers, version {rows[0]['verifier'] if rows else '-'}"
-    )
+    print(f"{set_} {arm} {name}: {len(rows)} answers, verifier {'0.2.0' if old else PINNED}")
 
 
 def judge(set_: str, name: str) -> None:

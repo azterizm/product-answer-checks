@@ -60,3 +60,10 @@ def test_the_draw_is_read_up_to_its_first_gap() -> None:
     prefix, selection = fetch_icecat.stopping_point(rows)
     assert sorted(prefix) == [0, 1, 2]
     assert not selection.complete
+
+
+def test_the_arm_label_is_the_pinned_commit() -> None:
+    import tomllib  # noqa: PLC0415
+
+    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    assert pyproject["tool"]["uv"]["sources"]["legal-rag-verifier"]["rev"] == check.PINNED
