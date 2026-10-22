@@ -1,0 +1,153 @@
+# Test 1: what each check costs on product answers (method fixed 2026-10-22, before any download)
+
+The build plan (Joko, §2) made exact. Everything below is fixed before the draw, the battery and any model call;
+a change after this commit is listed under "Changes" with its date and reason.
+
+## Question
+
+On product questions answered from listings, what does each check cost in wrong sentences kept, right sentences
+removed and seconds added per answer?
+
+## 1. Products
+
+**Source.** Open Icecat through its JSON API (`live.icecat.biz/api`, username only; the Open Content Licence
+accepted by the account holder). Each product is fetched in English and in French with the same Icecat ID.
+
+**Draw.** Icecat IDs drawn uniformly from [90,000,000, 135,000,000) with `random.Random(20261022)`, in draw order,
+until the battery is full or 40,000 IDs are drawn. The range holds the recent catalogue (about 4 % of IDs are Open
+Icecat products in a probe of 300). Requests: at most 8 at a time, about 10 per second, under the fair-use 50.
+
+**Eligible** when all hold:
+
+1. Both sheets return `OK`, and the French sheet's local title is in French.
+2. The English category name, lower-cased, contains one of: laptop, notebook, tablet, pc, workstation, monitor,
+   smartphone, mobile phone, smartwatch, headphone, headset, earphone, speaker, soundbar, tv, television, projector,
+   camera, e-book, power bank, console, printer, keyboard, mouse, mice, router, hard drive, solid state drive,
+   flash drive, vacuum, coffee, kettle, toaster, blender, food processor, microwave, hair, shaver, toothbrush, iron,
+   fryer, fan, air purifier, heater, dishwasher, washing machine, refrigerator, fridge, freezer, oven, dryer, hob,
+   cooker; and none of: spare part, accessor, case, cover, cable, mount, bag, part, screen protector, warranty,
+   replacement, filter, stand, dock, adapter, ink, toner, licence, license. Fashion and grocery are not covered.
+3. Both sheets have at least 15 features with a value.
+4. At most 2 products per (brand, category) are taken; later ones are skipped.
+
+**Sets, in draw order of eligible products.**
+
+- **Dev:** the first 10. Used only to check the prompt and the scripts; never in the battery.
+- **Type E (energy):** the next 12 whose sheets have an energy efficiency class (feature 2705) and a feature whose
+  English name starts with "Energy consumption" or "Power consumption".
+- **Type B (fit under budget):** the next 12 whose category has two more eligible, unused products; those two are
+  its companions (the first two in draw order), used in no other question.
+- **Types A, C, D:** the rest in draw order, 12 each; type C needs a weight (feature 94) and one more feature
+  whose value starts with a number.
+- If the draw ends short: what passes is used if at least 40 products (plan, risks), and the count is stated.
+
+## 2. Listings and offers
+
+**Listing** (one per product and language): the sheet's title, its short summary, then every feature as
+`Group — Name: Value`, from that language's sheet. The marketing description and images are left out.
+
+**Offers are constructed, not real** (Icecat has no prices), by `scripts/build_battery.py` with
+`random.Random(20261022 + Icecat ID)`. Offers are as of **Monday 2 November 2026**, stated above them. Each product
+gets 3 or 4 offers from fictional merchants (Boutique A–D in French, Shop A–D in English): price, an optional old
+price, shipping, an estimated delivery date, a return window and stock. The French and English offers hold the same
+values, written as merchants in each language write them:
+
+- French: `Boutique A — Prix : 279,99 € (au lieu de 329,99 €) — Livraison : 4,99 € — Livraison estimée le jeudi 5
+  novembre 2026 — Retours sous 30 jours — En stock`
+- English: `Shop A — Price: €279.99 (was €329.99) — Shipping: €4.99 — Estimated delivery Thursday 5 November 2026 —
+  Returns within 30 days — In stock`
+
+Base price: log-uniform in a band by category (small appliances €19–199; electronics and computing €49–1,999;
+large appliances €249–1,299), ending in .99 or .00. Offers vary around it by up to ±15 %. Shipping is free or
+€2.99–9.99; delivery 1 to 8 working days after the offers' date; returns 14, 30 or 60 days.
+
+**Traps** (each offer set holds at least one): a struck-through old price; a lower price whose shipping makes the
+total higher; the cheapest offer out of stock. Type A always has 4 offers and all three. Other types have the
+struck-through price and one of the other two.
+
+## 3. Questions (in English for both halves, so only the listing language differs)
+
+| Type | Template (phrasing picked by the seed where there are several) |
+|---|---|
+| A. Best price | "Where is this cheapest, delivered, from a shop that has it in stock?" / "Which shop gives me the lowest total price including delivery?" / "Where should I buy this to pay the least, shipping included?" |
+| B. Fit under budget | "Which of these three has a {feature} of at least {value} and costs under €{budget} delivered?" Three listings, one offer each. The feature is the numeric one the three share with the most distinct values (ties by the seed); the threshold is the second-highest value, so two qualify on the spec; of those, one is under the budget delivered and the other only before shipping; the third is the cheapest. |
+| C. Spec facts | "How much does it weigh, and what is its {feature}?" The feature is drawn by the seed from the numeric features other than weight and packaging. |
+| D. Delivery and returns | "Which shop delivers by {weekday day month} and takes returns for at least {N} days?" Offers built so that exactly one meets both: one other delivers in time with a shorter return window, one other has the returns but arrives later. |
+| E. Energy | "What is its energy efficiency class and its {consumption feature}?" |
+
+Offers, traps and questions are written without looking at the claim check's patterns, and the checker is not run
+on any battery row before the seal.
+
+**Before the seal**, a census of the French listings for the forms the claim check is known not to read
+(`legal-rag-verifier` API.md §6): digit groups split by a plain space and not followed by a decimal comma or a
+currency ("5 000 mAh"), and a comma before exactly three digits. It uses its own patterns, not the checker. Counts
+are reported; if any appear, you decide whether the verifier is fixed first, under its own gate.
+
+## 4. Seal
+
+`battery/seal.json`, written before any generator call: the SHA-256 of each raw sheet (FR and EN), each rendered
+listing, the offers, the questions and the prompt, the Icecat fetch date, and the draw's counts. **Committed:**
+the Icecat IDs, categories, brands, types, companions, hashes, offers, questions, the prompt and
+`scripts/fetch_icecat.py`, which rebuilds the sheets with the reader's own Open Icecat username. **Not committed:**
+sheet text and raw sheets (`data/`, git-ignored), as the plan's default.
+
+## 5. Generation
+
+- **Claude Opus 4.6** (`claude-opus-4-6-thinking`) and **Gemini 3.8 Flash** (`gemini-3.8-flash-high`) through the
+  router, as in the verifier's stop 71: one run each, router defaults, 4 at a time. 240 answers.
+- **Prompt** (exact text sealed in `battery/prompt.txt`): a system message "You are a shopping assistant. Answer
+  the customer's question using only the product listings and offers below. Answer in English, in at most 4
+  sentences." followed by the listings and offers; the question as the user message.
+- Answers in English for both halves (prose checks are English only; French answers are a stated limit).
+- Time per answer is recorded. Errors are retried once; an answer still missing is reported as missing.
+
+## 6. Arms
+
+Post-hoc checks on the same 240 answers, split into sentences by the verifier's `split_sentences`. A rejected
+sentence is dropped, as in stop 71. The premise for every check is the question's listings and offers.
+
+| Arm | Check | Runs on |
+|---|---|---|
+| 0 | No check | — |
+| 1 | The other model checks each sentence (stop 71's `check`, copied with its source commit) | Router |
+| 2 | Claim check, `legal-rag-verifier` 0.3.0 build | CPU |
+| 2b | Claim check, 0.2.0, French half only | CPU |
+| 3 | Claim check, then the stop 64 1B judge (`azterizm/minicpm5-1b-clause-judge`) on the sentences it passes | CPU, then one Modal L40S (SGLang) |
+
+The 1B judge is used as published; it has never seen a product sentence, and is reported so.
+
+## 7. Grading
+
+- Claude Opus 5.5 grades every sentence of arm 0 against the question, the listings and the offers: **right**,
+  **wrong** or **unsure** (the verifier's `live68_grade.py` flow, copied). Each sentence is also marked as a
+  price sentence or not.
+- **Wrong:** it states something the listings and offers do not support, or contradicts them. A sentence that
+  gives a struck-through price as the current price is wrong. A total that leaves out shipping when the question
+  asks for the delivered price is wrong.
+- You grade every unsure sentence by hand, and a random 30 sentences per generator (seed 20261030) as a check on
+  the grader (stop 71 saw Opus 5.5 soft on Opus 4.6).
+
+## 8. Report
+
+Per generator, and for the FR and EN halves: wrong sentences kept, right sentences removed, empty answers, seconds
+added per answer at the median with the hardware named per arm (router calls, CPU, L40S); a separate row for price
+sentences; arm 2 against 2b on the French half (false rollbacks before and after stop 75).
+
+**Reading rule.** It decides only the one plain sentence in the email; every number is reported either way. Arm 3
+"costs less for the same safety" if, per generator, it keeps at most 2 more wrong sentences than arm 1 and removes
+fewer right sentences. Otherwise the email says what happened.
+
+## 9. Limits (stated in the README)
+
+Constructed offers. Open Icecat categories only. English questions and answers only. One run per generator. Small
+counts of wrong sentences (frontier models erred on 3 to 10 of about 500 in stop 71). The 1B judge untrained on
+products. Not Joko's system, catalogue or prompts.
+
+## 10. Spend
+
+Router answers and checks: free. Opus 5.5 grading, about 1,000 sentences: about $2–3. Modal L40S for the 1B judge:
+about $1. Neither runs before your spend go.
+
+## Changes
+
+None yet.

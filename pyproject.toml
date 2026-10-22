@@ -8,6 +8,8 @@ version = "0.0.0"
 description = "Checks on AI shopping answers against their product listings: what each check catches and what it costs"
 readme = "README.md"
 authors = [{ name = "Abdullah Memon", email = "abdullah@memonsystems.com" }]
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 # The claim check under test. Pinned to the verifier commit with the French formats (stop 75);
 # moved to the 0.3.0 tag before test 1 runs.
