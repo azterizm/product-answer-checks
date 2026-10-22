@@ -46,6 +46,9 @@ ignore = [
     "TRY003",   # contextual messages on raised exceptions are wanted
     "ISC001",   # conflicts with the formatter
     "RUF001",   # French listings use typographic quotes, dashes and no-break spaces
+    "RUF002",   # docstrings cite METHOD sections with en dashes
+    "S311",     # every random draw here is a seeded, published draw, not a secret
+    "PLR0911", "PLR0912", "PLR0913",  # selection and offer rules read best as one function each
 ]
 
 [tool.ruff.lint.per-file-ignores]
