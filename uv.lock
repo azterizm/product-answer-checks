@@ -91,7 +91,7 @@ wheels = [
 [[package]]
 name = "legal-rag-verifier"
 version = "0.2.0"
-source = { git = "file:///Users/abdiel/Code/legal-rag-verifier?rev=da40159#da40159e54c75acd9265fd27e5e0ac9c52820678" }
+source = { git = "file:///Users/abdiel/Code/legal-rag-verifier?rev=66450a6#66450a6204daaf9f74ace2ea797653eaeb72e2ca" }
 
 [[package]]
 name = "librt"
@@ -321,7 +321,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "legal-rag-verifier", git = "file:///Users/abdiel/Code/legal-rag-verifier?rev=da40159" }]
+requires-dist = [{ name = "legal-rag-verifier", git = "file:///Users/abdiel/Code/legal-rag-verifier?rev=66450a6" }]
 
 [package.metadata.requires-dev]
 dev = [

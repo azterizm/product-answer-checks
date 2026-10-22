@@ -163,3 +163,8 @@ about $1. Neither runs before your spend go.
 - 2026-10-22, during the draw (7,718 IDs drawn, none used): requests at up to 32 at a time, about 40 a second,
   still under the fair-use 50, by your choice. The battery is read from the draw cut at the first ID that
   completes it, so the faster, batched fetch gives the same products as a one-at-a-time draw.
+- 2026-10-22, before the seal: the census (`battery/census.json`) found 7 plain-space groups, all in model names
+  ("Galaxy Book3 360"), read right; and 38 commas before three digits: lists written the same in both languages
+  ("10,100,1000 Mbit/s") and 18 French decimals with three places ("0,965 kWh"), read as thousands. By your choice
+  the verifier was fixed first, under its own gate (stop 75, `66450a6`: a lone "0," and three digits is a
+  decimal); the pin moved to that commit. 5 of the 18 ("1,031", "3,584") stay thousands: a stated limit.

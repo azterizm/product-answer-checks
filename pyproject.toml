@@ -16,7 +16,7 @@ requires-python = ">=3.11"
 dependencies = ["legal-rag-verifier"]
 
 [tool.uv.sources]
-legal-rag-verifier = { git = "file:///Users/abdiel/Code/legal-rag-verifier", rev = "da40159" }
+legal-rag-verifier = { git = "file:///Users/abdiel/Code/legal-rag-verifier", rev = "66450a6" }
 
 [dependency-groups]
 dev = [
