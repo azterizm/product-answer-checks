@@ -26,8 +26,8 @@ def test_the_answer_prompt_is_the_sealed_prompt_and_the_question() -> None:
     assert user == {"role": "user", "content": "Where?"}
 
 
-def test_no_opus_55_call_before_the_spend_go() -> None:
-    assert router.CAPS[router.OPUS55] == 0.0
+def test_opus_55_is_capped_at_the_spend_go() -> None:
+    assert router.CAPS[router.OPUS55] == 10.0
     assert set(answer.MODELS.values()) == {router.GEMINI, router.OPUS46}
 
 

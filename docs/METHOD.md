@@ -125,9 +125,9 @@ The 1B judge is used as published; it has never seen a product sentence, and is 
 
 ## 7. Grading
 
-- Claude Opus 5.5 grades every sentence of arm 0 against the question, the listings and the offers: **right**,
-  **wrong** or **unsure** (the verifier's `live68_grade.py` flow, copied). Each sentence is also marked as a
-  price sentence or not.
+- Claude Opus 5.5 and Gemini 3.8 Flash grade every sentence of arm 0 against the question, the listings and the
+  offers: **right**, **wrong** or **unsure** (the verifier's `live68_grade.py` flow, copied; see Changes). A
+  price sentence is one with "€", "EUR" or "euro".
 - **Wrong:** it states something the listings and offers do not support, or contradicts them. A sentence that
   gives a struck-through price as the current price is wrong. A total that leaves out shipping when the question
   asks for the delivered price is wrong.
@@ -168,3 +168,17 @@ about $1. Neither runs before your spend go.
   ("10,100,1000 Mbit/s") and 18 French decimals with three places ("0,965 kWh"), read as thousands. By your choice
   the verifier was fixed first, under its own gate (stop 75, `66450a6`: a lone "0," and three digits is a
   decimal); the pin moved to that commit. 5 of the 18 ("1,031", "3,584") stay thousands: a stated limit.
+- 2026-10-22, after the answers began and before any grading or arm 3 call (your go on Modal and Opus 5.5, and
+  your offer of Gemini 3.8 Flash):
+  - **Grading by two graders**, the verifier's `live68_grade.py` flow as it stands (stop 68): Opus 5.5 and Flash
+    each grade every sentence once ("yes" right, "no" wrong, "unsure"); the sentences they differ on, or either
+    marks unsure, are asked again of both with a reason first; what still differs goes to you, with the 30
+    random sentences per generator. Flash grades its own answers too, so agreement is reported per generator.
+  - **Price sentence:** a sentence that contains "€", "EUR" or "euro" (any case). Fixed here, not by the checker.
+  - **Arm 3's judge:** `azterizm/minicpm5-1b-clause-judge` adapter `run2` (stop 64) at revision `7cd8ee5`, merged
+    into `openbmb/MiniCPM5-1B` at `87179e5` when the container starts, served by SGLang `v0.5.21` on one L40S,
+    greedy, at most 1,024 tokens, thinking off, the short-reply prompt it was trained on (`scripts/judge.py`).
+    Each answer's loop runs in the container, so its time is the L40S's; the claim check's time is added from
+    arm 2 (CPU).
+  - **Spend caps:** Opus 5.5 at $10 in this repo's router ledger; Modal at $3 in its own ledger. A call that could
+    pass either cap is not made.

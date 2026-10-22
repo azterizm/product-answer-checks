@@ -33,7 +33,7 @@ OPUS55 = "claude-opus-5-5(high)"
 MODELS = frozenset({GEMINI, OPUS46, OPUS55})
 # USD per million input and output tokens, for capped models only.
 PRICES = {OPUS55: (4.0, 20.0)}
-CAPS = {OPUS55: 0.0}  # no Opus 5.5 call before your spend go (METHOD §10)
+CAPS = {OPUS55: 10.0}  # your go, 2026-10-22 (METHOD, Changes)
 LEDGER = ROOT / "results/raw/router_ledger.json"
 RETRY_STATUS = frozenset({408, 409, 425, 429, 500, 502, 503, 504, 529})
 MAX_OUTPUT_GUESS = 8000  # tokens reserved per call when checking the cap
