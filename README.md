@@ -2,83 +2,95 @@
 
 [![CI](https://github.com/azterizm/product-answer-checks/actions/workflows/ci.yml/badge.svg)](https://github.com/azterizm/product-answer-checks/actions/workflows/ci.yml)
 
-What it costs to check an AI shopping answer against its product listing before it is shown, and what each check
-catches. Two hosted models answered 120 product questions from Open Icecat listings, half in French and half in
-English, with constructed offers. Each answer was then checked four ways. Method, fixed before the runs and with
-every later change dated: [`docs/METHOD.md`](docs/METHOD.md). Counts: [`results/report.json`](results/report.json).
+Measures what it costs to check AI shopping answers against product listings, and what each check catches.
 
-## Result
+## Results
 
-Claude Opus 4.6, 120 answers, 288 sentences, 32 of them wrong (35 at most, see grading):
+Two models answered 120 product questions. Each question came with a product listing and shop offers. Half of
+the listings were in French, half in English. Each answer was checked in four ways.
 
-| Check | Wrong sentences kept | Wrong prices kept | Right sentences removed | Time added per answer |
+Claude Opus 4.6: 288 sentences, 32 to 35 wrong.
+
+| Check | Wrong sentences kept | Wrong prices kept | Correct sentences removed | Time added per answer |
 |---|---|---|---|---|
-| None | 32–35 | 13–16 | 0 | 0 |
-| Second model (Gemini 3.8 Flash) checks each sentence | 0 | 0 | 91–94 | 12.6 s (hosted, through a router) |
-| Claim check (prices, dates, units) | 21–23 | 3–5 | 105–106 | 6 ms (CPU) |
-| Claim check, then a 1B judge | 5–7 | 2–4 | 147–148 | 0.13 s (CPU, then one L40S) |
+| No check | 32 to 35 | 13 to 16 | 0 | 0 |
+| Second model checks each sentence, Gemini 3.8 Flash | 0 | 0 | 91 to 94 | 12.6 s |
+| Claim check of prices, dates and units | 21 to 23 | 3 to 5 | 105 to 106 | 6 ms |
+| Claim check, then a 1B model | 5 to 7 | 2 to 4 | 147 to 148 | 0.13 s |
 
-Gemini 3.8 Flash, 120 answers, 262 sentences, none wrong (one unsettled):
+Gemini 3.8 Flash: 262 sentences, 0 to 1 wrong.
 
-| Check | Wrong sentences kept | Right sentences removed | Time added per answer |
+| Check | Wrong sentences kept | Correct sentences removed | Time added per answer |
 |---|---|---|---|
-| None | 0–1 | 0 | 0 |
-| Second model (Qwen 27B) checks each sentence | 0 | 55–56 | 1.7 s (one L40S) |
-| Claim check | 0 | 74–75 | 6 ms (CPU) |
-| Claim check, then a 1B judge | 0 | 107–108 | 0.14 s (CPU, then one L40S) |
+| No check | 0 to 1 | 0 | 0 |
+| Second model checks each sentence, Qwen 27B | 0 | 55 to 56 | 1.7 s |
+| Claim check of prices, dates and units | 0 | 74 to 75 | 6 ms |
+| Claim check, then a 1B model | 0 | 107 to 108 | 0.14 s |
 
-- A second model catches every wrong sentence and removes about a third of the right ones; it adds seconds.
-- The claim check costs milliseconds but keeps most wrong sentences: Opus 4.6's errors were mostly reasoning
-  (two products said to fit a budget that shipping breaks), not misquoted figures. It removes right sentences
-  that state a total the model added up ("€908.98 (€903.99 + €4.99)"), which it cannot ground.
-- The 1B judge after it catches most of the rest, at 0.13 s, but removes the most right sentences. By the
-  reading rule fixed beforehand (at most 2 more wrong sentences kept than the second model, and fewer right
-  sentences removed), it does not cost less for the same safety, on either generator.
-- French listings: the claim check (`legal-rag-verifier` 0.3.0, with the French formats) removes about as many right
-  sentences on the French half as on the English (36 and 38 on Flash's answers, 51 and 54 on Opus 4.6's). The
-  release before it (0.2.0) removed 74 and 88 on the French half.
+- A second model removed every wrong sentence. It also removed about one in three correct sentences and added
+  seconds to each answer.
+- The claim check added milliseconds but kept most wrong sentences. Most errors were reasoning errors, such as a
+  product said to be under budget when shipping puts it over. The check also removed correct sentences that
+  state a total the model calculated.
+- The claim check followed by the 1B model removed most wrong sentences in 0.13 s. It removed the most correct
+  sentences. It did not meet the pass rule set before the test.
+- French listings now lose about as many correct sentences as English listings: 36 and 38 for Flash, 51 and 54
+  for Opus 4.6. The previous release of the claim check removed 74 and 88 on the French half.
+
+Times were measured on different hardware. The second model ran through a hosted API for the Opus 4.6 answers
+and on one GPU for the Flash answers. The claim check ran on a laptop CPU. The 1B model ran on one GPU.
+
+## Method
+
+- Products and listings come from Open Icecat, in French and English for the same product.
+- Offers are constructed. Each set includes common traps: an old price shown next to the current one, a lower
+  price with higher shipping, and the cheapest offer out of stock.
+- Five question types: best price, fit under a budget, specifications, delivery and returns, energy use.
+- A wrong price is a wrong sentence that states a euro amount.
+- The method was fixed before the test. Every later change is dated in [docs/METHOD.md](docs/METHOD.md).
+- All counts are in [results/report.json](results/report.json).
 
 ## Limits
 
-- Constructed offers (Icecat has no prices); Open Icecat categories only (electronics, computing, appliances).
-- English questions and answers only; one run per generator.
-- Not Joko's system, catalogue or prompts.
-- Grading by two models, not by hand: Gemini 3.8 Flash and Qwen 27B (Claude Opus 5.5, planned as a grader, was
-  unavailable). They agreed on 506 of 550 sentences at once and 40 more after giving reasons; 4 stay unsettled,
-  hence the ranges. Flash grades its own answers too. 60 random sentences are set aside for a hand check.
-- The second-model check used a different judge per generator (Flash for Opus 4.6's answers, through a router;
-  Qwen 27B for Flash's, on a GPU), so their times do not compare with each other.
-- The 1B judge (`azterizm/minicpm5-1b-clause-judge`, run2) was trained on UK legislation and has never seen a
-  product sentence.
-- Small counts: 32–35 wrong sentences, all from one generator.
+- Offers are constructed. Icecat has no prices.
+- Products are limited to electronics, computing and appliances.
+- Questions and answers are in English. Each model answered once.
+- Two models graded the sentences, Gemini 3.8 Flash and Qwen 27B. People did not. The models agreed on 546 of 550
+  sentences. The 4 open sentences are shown as ranges. Flash also graded its own answers.
+- The second model check used a different model for each answer set. Its times do not compare between the two
+  tables.
+- The 1B model was trained on UK legislation, not on product text.
+- There are few wrong sentences, 32 to 35, all from one model.
+- This is not a test of any company's production system.
 
 ## Reproduce
 
-Needs Python 3.11+ and [uv](https://docs.astral.sh/uv/), and for each step:
+Requirements:
 
-- the sheets: an Open Icecat username (free account) in `ICECAT_USERNAME`;
-- the answers, arm 1 and grading: an OpenAI-compatible endpoint at `localhost:8317` serving
-  `claude-opus-4-6-thinking` and `gemini-3.8-flash-high`, its key in `LLM_ROUTER_KEY` (`scripts/router.py`);
-- arm 3 and Qwen 27B: a [Modal](https://modal.com) account (one L40S; this run cost $0.84).
+- Python 3.11 or later and [uv](https://docs.astral.sh/uv/).
+- An Open Icecat account. Set `ICECAT_USERNAME`.
+- An OpenAI compatible endpoint at `localhost:8317` that serves `claude-opus-4-6-thinking` and
+  `gemini-3.8-flash-high`. Set `LLM_ROUTER_KEY`.
+- A [Modal](https://modal.com) account for the 1B model and Qwen 27B. This run cost $0.84.
 
-Variables can go in a `.env` file at the root (git-ignored). The tests need none of these:
-`uv run pytest`.
+Settings can be kept in a `.env` file in the repository root. The tests need none of them: `uv run pytest`.
 
 ```sh
-uv run python scripts/fetch_icecat.py rebuild      # the sealed sheets, checked against battery/seal.json
-uv run python scripts/answer.py battery flash      # answers through an OpenAI-compatible router
+uv run python scripts/fetch_icecat.py rebuild
+uv run python scripts/answer.py battery flash
 uv run python scripts/check.py claims battery flash
 uv run --with modal modal run scripts/judge1b.py::run --split battery --model flash
-uv run python scripts/grade.py sheet               # then the graders; scripts/qwen27.py on Modal
+uv run python scripts/grade.py sheet
+uv run --with modal modal run scripts/qwen27.py::run
 uv run python scripts/report.py
 ```
 
-The battery (`battery/`) holds the Icecat IDs, the constructed offers, the questions, the prompt and SHA-256
-hashes of every sheet and premise. `fetch_icecat.py rebuild` reports any sheet that has changed since the seal.
+The `battery` folder holds the product IDs, offers, questions, prompt and a hash of every listing.
+`fetch_icecat.py rebuild` reports any listing that changed since the test.
 
 ## Data and licence
 
-Product data comes from [Open Icecat](https://icecat.biz) under its Open Content Licence, provided "as is". Sheet
-text is not redistributed here: each reader fetches it with their own account. The offers, questions and code are
-this repository's, under the [AGPL-3.0](LICENSE). The claim check is
-[`legal-rag-verifier`](https://github.com/azterizm/legal-rag-verifier) 0.3.0.
+- Product data: [Open Icecat](https://icecat.biz), Open Content Licence, provided as is. Listing text is not
+  included. Each user downloads it with their own account.
+- Code, offers and questions: [AGPL-3.0](LICENSE).
+- Claim check: [legal-rag-verifier](https://github.com/azterizm/legal-rag-verifier) 0.3.0.
