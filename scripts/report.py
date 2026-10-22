@@ -135,9 +135,13 @@ def report() -> dict[str, Any]:
                     rows = arm_rows(gen, arm, lang, price_only=price_only)
                     if rows:
                         arms[name] = tally(rows, grades)
+                        if price_only:  # an answer with no price sentence is not an empty answer
+                            del arms[name]["empty"]
                 table[f"{lang} {scope}"] = arms
         both = {}
         for name, arm in ARMS.items():
+            if arm == "claims-020":  # the French half only: not comparable across both halves
+                continue
             rows = arm_rows(gen, arm, "fr") + arm_rows(gen, arm, "en")
             if rows:
                 both[name] = tally(rows, grades)
