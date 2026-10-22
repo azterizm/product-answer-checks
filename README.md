@@ -1,5 +1,7 @@
 # product-answer-checks
 
+[![CI](https://github.com/azterizm/product-answer-checks/actions/workflows/ci.yml/badge.svg)](https://github.com/azterizm/product-answer-checks/actions/workflows/ci.yml)
+
 What it costs to check an AI shopping answer against its product listing before it is shown, and what each check
 catches. Two hosted models answered 120 product questions from Open Icecat listings, half in French and half in
 English, with constructed offers. Each answer was then checked four ways. Method, fixed before the runs and with
@@ -52,7 +54,15 @@ Gemini 3.8 Flash, 120 answers, 262 sentences, none wrong (one unsettled):
 
 ## Reproduce
 
-Python 3.11+, [uv](https://docs.astral.sh/uv/), an Open Icecat username (free) in `ICECAT_USERNAME`.
+Needs Python 3.11+ and [uv](https://docs.astral.sh/uv/), and for each step:
+
+- the sheets: an Open Icecat username (free account) in `ICECAT_USERNAME`;
+- the answers, arm 1 and grading: an OpenAI-compatible endpoint at `localhost:8317` serving
+  `claude-opus-4-6-thinking` and `gemini-3.8-flash-high`, its key in `LLM_ROUTER_KEY` (`scripts/router.py`);
+- arm 3 and Qwen 27B: a [Modal](https://modal.com) account (one L40S; this run cost $0.84).
+
+Variables can go in a `.env` file at the root (git-ignored). The tests need none of these:
+`uv run pytest`.
 
 ```sh
 uv run python scripts/fetch_icecat.py rebuild      # the sealed sheets, checked against battery/seal.json
@@ -64,7 +74,11 @@ uv run python scripts/report.py
 ```
 
 The battery (`battery/`) holds the Icecat IDs, the constructed offers, the questions, the prompt and SHA-256
-hashes of every sheet and premise; sheet text is not redistributed. Spend for this run: Modal $0.84; the router
-calls were within existing plans.
+hashes of every sheet and premise. `fetch_icecat.py rebuild` reports any sheet that has changed since the seal.
 
-Licence: AGPL-3.0.
+## Data and licence
+
+Product data comes from [Open Icecat](https://icecat.biz) under its Open Content Licence, provided "as is". Sheet
+text is not redistributed here: each reader fetches it with their own account. The offers, questions and code are
+this repository's, under the [AGPL-3.0](LICENSE). The claim check is
+[`legal-rag-verifier`](https://github.com/azterizm/legal-rag-verifier) 0.3.0.

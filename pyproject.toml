@@ -14,6 +14,10 @@ requires-python = ">=3.11"
 # The claim check under test: 0.3.0, whose code is the build test 1 ran on (verifier 66450a6).
 dependencies = ["legal-rag-verifier>=0.3.0"]
 
+[project.urls]
+Repository = "https://github.com/azterizm/product-answer-checks"
+Method = "https://github.com/azterizm/product-answer-checks/blob/main/docs/METHOD.md"
+
 [dependency-groups]
 dev = [
     "pytest>=8.3",
