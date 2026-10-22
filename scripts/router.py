@@ -26,7 +26,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 URL = "http://localhost:8317/v1/chat/completions"
-KEY_FILE = Path(os.environ.get("ROUTER_KEY_FILE", ROOT / ".router_key"))  # git-ignored
+KEY_FILE = ROOT / ".router_key"  # git-ignored; ROUTER_KEY_FILE names another
 GEMINI = "gemini-3.8-flash-high"
 OPUS46 = "claude-opus-4-6-thinking"
 OPUS55 = "claude-opus-5-5(high)"
@@ -49,7 +49,8 @@ class RouterError(RuntimeError):
 
 
 def _key() -> str:
-    return os.environ.get("LLM_ROUTER_KEY") or KEY_FILE.read_text(encoding="utf-8").strip()
+    key_file = Path(os.environ.get("ROUTER_KEY_FILE") or KEY_FILE)
+    return os.environ.get("LLM_ROUTER_KEY") or key_file.read_text(encoding="utf-8").strip()
 
 
 def ledger() -> dict[str, dict[str, float]]:
