@@ -67,3 +67,38 @@ def test_the_arm_label_is_the_pinned_commit() -> None:
 
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert pyproject["tool"]["uv"]["sources"]["legal-rag-verifier"]["rev"] == check.PINNED
+
+
+def test_the_report_counts_wrong_kept_and_right_removed() -> None:
+    from scripts import report  # noqa: PLC0415
+
+    rows = [("A01-fr", ["Right.", "Wrong.", "Odd."], [False, True, True], 0.5)]
+    grades = {("A01-fr", "Right."): "yes", ("A01-fr", "Wrong."): "no"}
+    out = report.tally(rows, grades)
+    assert (out["right_removed"], out["wrong_kept"], out["ungraded"], out["empty"]) == (1, 1, 1, 0)
+    assert report.is_price("It costs €279.99.")
+    assert not report.is_price("It weighs 2 kg.")
+
+
+def test_the_reading_rule() -> None:
+    from scripts import report  # noqa: PLC0415
+
+    one = {"wrong_kept": 3, "right_removed": 20}
+    assert report.reading(
+        {"1 other model": one, "3 claim check then 1B": {"wrong_kept": 5, "right_removed": 19}}
+    )
+    assert not report.reading(
+        {"1 other model": one, "3 claim check then 1B": {"wrong_kept": 6, "right_removed": 1}}
+    )
+    assert not report.reading(
+        {"1 other model": one, "3 claim check then 1B": {"wrong_kept": 3, "right_removed": 20}}
+    )
+
+
+def test_the_graders_random_check_is_seeded_and_per_generator() -> None:
+    from scripts import grade  # noqa: PLC0415
+
+    key = {f"Q{i:03d}A1": {"answers": ["flash" if i % 2 else "opus46"]} for i in range(200)}
+    first = grade.checks(key)
+    assert first == grade.checks(key)
+    assert len(first) == 2 * grade.CHECK_PER_GENERATOR
