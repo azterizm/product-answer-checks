@@ -189,3 +189,12 @@ about $1. Neither runs before your spend go.
   marks unsure goes to you, with the 30 random sentences per generator, which are now the only check on the
   grader. Flash grades its own answers as well as Opus 4.6's; the report gives your agreement with it per
   generator. No Opus 5.5 call was made or paid for.
+- 2026-10-22, to finish today (your call: no waiting; Opus 5.5 still HTTP 503, Opus 4.6 rate-limited for 3.7 hours):
+  - **Arm 1 on Flash's answers:** Qwen 27B checks them in place of Opus 4.6: the verifier's 27B judge
+    (`qwen27-ar4`, `Vishva007/Qwen3.8-27B-W4A16-AutoRound-GPTQ` at `1b9d56b`, thinking off, the card's
+    non-thinking sampling, the short reply prompt), on one L40S, one answer at a time. The 83 Opus 4.6 labels
+    already taken are not used. Arm 1's judge and hardware therefore differ by generator (Flash on the router for
+    Opus 4.6's answers; Qwen 27B on an L40S for Flash's), and the report says so.
+  - **A second grader:** Qwen 27B grades all 550 sentences on the same server, in Opus 5.5's place in the
+    two-grader flow (first pass; both again, reason first, where they differ). What still differs is reported as
+    a range (counted right, then wrong), not waited on; your 60 random checks become optional.

@@ -8,9 +8,7 @@ Sends the listings, offers, questions and the sentences the claim check passed; 
 """
 
 # No `from __future__ import annotations`: Modal reads function annotations at runtime.
-import fcntl
 import json
-import os
 import subprocess
 import sys
 import time
@@ -35,12 +33,6 @@ PORT = 30000
 GPU = "L40S"
 WORKERS = 1  # one answer at a time, so each answer's time is not shared (METHOD, Changes)
 CHUNK = 60
-# Modal spend as the verifier's modal_ledger.py: list prices plus 15 %, a hard cap (METHOD).
-LEDGER = ROOT / "results/raw/modal_ledger.json"
-PER_HOUR = {"L40S": 1.95, "CPU": 0.10}
-OVERHEAD = 1.15
-CAP = 3.0
-
 merge_image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install("torch==2.14.0", "transformers==5.17.0", "peft==0.21.0", "accelerate==1.15.0")
@@ -54,43 +46,6 @@ serve_image = (
 )
 runs = modal.Volume.from_name("product-answer-checks-runs", create_if_missing=True)
 app = modal.App("product-answer-checks-arm3")
-
-
-# ---------------------------------------------------------------------- the ledger
-def usd(gpu: str, seconds: float) -> float:
-    return round(PER_HOUR[gpu] * seconds / 3600 * OVERHEAD, 4)
-
-
-def entries() -> list[dict[str, Any]]:
-    return json.loads(LEDGER.read_text(encoding="utf-8")) if LEDGER.exists() else []
-
-
-def spent() -> float:
-    return round(sum(float(e["usd"]) for e in entries()), 4)
-
-
-def check_cap(gpu: str, estimate_seconds: float) -> None:
-    if spent() + usd(gpu, estimate_seconds) > CAP:
-        raise SystemExit(f"Modal: ${spent():.2f} spent, cap ${CAP:.2f}")
-
-
-def record(run: str, gpu: str, seconds: float, note: str = "") -> None:
-    LEDGER.parent.mkdir(parents=True, exist_ok=True)
-    with LEDGER.with_suffix(".lock").open("w") as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX)
-        data = entries()
-        data.append(
-            {
-                "run": run,
-                "gpu": gpu,
-                "seconds": round(seconds, 1),
-                "usd": usd(gpu, seconds),
-                "note": note,
-            }
-        )
-        tmp = LEDGER.with_suffix(f".{os.getpid()}.tmp")
-        tmp.write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8")
-        tmp.replace(LEDGER)
 
 
 # ---------------------------------------------------------------------- Modal side
@@ -228,17 +183,26 @@ class Judge1B:
 
 
 # ---------------------------------------------------------------------- local side
+def _ledger() -> Any:
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import modal_ledger  # type: ignore[import-not-found]  # noqa: PLC0415
+
+    return modal_ledger
+
+
 @app.local_entrypoint()
 def merge() -> None:
-    check_cap("CPU", 1800)
+    ledger = _ledger()
+    ledger.check("CPU", 1800)
     t0 = time.time()
     print(merge_adapter.remote())
-    record("merge adapter", "CPU", time.time() - t0, f"{ADAPTER}@{ADAPTER_REVISION}/{RUN}")
-    print(f"Modal spent ${spent():.2f} of ${CAP:.2f}")
+    ledger.record("merge adapter", "CPU", time.time() - t0, f"{ADAPTER}@{ADAPTER_REVISION}/{RUN}")
+    print(f"Modal spent ${ledger.spent():.2f} of ${ledger.CAP:.2f}")
 
 
 @app.local_entrypoint()
 def run(split: str = "battery", model: str = "flash") -> None:
+    ledger = _ledger()
     sys.path.insert(0, str(ROOT / "src"))
     sys.path.insert(0, str(ROOT / "scripts"))
     import answer as an  # type: ignore[import-not-found]  # noqa: PLC0415
@@ -259,12 +223,12 @@ def run(split: str = "battery", model: str = "flash") -> None:
     judge = Judge1B()
     startup_recorded = False
     for start in range(0, len(jobs), CHUNK):
-        check_cap(GPU, 900)
+        ledger.check(GPU, 900)
         t0 = time.time()
         reply = judge.check.remote(jobs[start : start + CHUNK])
         seconds = reply["seconds"] + (0 if startup_recorded else reply["startup"])
         startup_recorded = True
-        record(
+        ledger.record(
             f"arm 3 {split} {model}",
             GPU,
             max(seconds, time.time() - t0),
@@ -283,6 +247,7 @@ def run(split: str = "battery", model: str = "flash") -> None:
                 }
                 f.write(json.dumps(row, ensure_ascii=False) + "\n")
         print(
-            f"{len(reply['results'])} answers, {reply['seconds']:.0f} s; Modal ${spent():.2f}",
+            f"{len(reply['results'])} answers, {reply['seconds']:.0f} s; "
+            f"Modal ${ledger.spent():.2f}",
             flush=True,
         )

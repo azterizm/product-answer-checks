@@ -38,9 +38,10 @@ from legal_rag_verifier.segmenter import split_sentences  # noqa: E402
 
 OUT = ROOT / "results/raw/grading"
 GRADES = ("yes", "no", "unsure")
-# Flash alone since 2026-10-22: Opus 5.5 down at the router (HTTP 503), by your choice (METHOD).
-GRADERS: tuple[str, ...] = ("flash",)
-MODELS = {"opus55": router.OPUS55, "flash": router.GEMINI}
+# Opus 5.5 was down at the router (HTTP 503): Flash and Qwen 27B grade, by your choice (METHOD).
+# Qwen 27B runs on Modal (scripts/qwen27.py), with this file's prompts and parsing.
+GRADERS: tuple[str, ...] = ("flash", "qwen27")
+MODELS = {"opus55": router.OPUS55, "flash": router.GEMINI, "qwen27": "qwen27-ar4 (Modal L40S)"}
 GENERATORS = ("flash", "opus46")
 SHEET_SEED = 20261022
 CHECK_SEED = 20261030  # the 30 random sentences per generator you grade (METHOD §7)
@@ -156,55 +157,67 @@ def parse(reply: Mapping[str, Any], items: Sequence[str], *, again: bool) -> dic
     return out
 
 
-def grade(grader: str, *, again: bool = False) -> None:
-    """``grader``'s share, one call per question, appended as each returns. The Opus 5.5 cap or a
-    rate limit past the router's retries ends the run cleanly; a rerun asks what is left."""
-    an.env()
-    model = MODELS[grader]
+def todo(grader: str, *, again: bool = False) -> list[tuple[str, list[str], list[dict[str, str]]]]:
+    """The questions ``grader`` still has to grade, each with its items and its messages."""
     have = done(grader, again=again)
     wanted = set(open_items()) if again else None
-    todo = []
+    out = []
     for q, block in blocks().items():
         items = [k for k in _ITEM.findall(block) if wanted is None or k in wanted]
         if items and not set(items) <= set(have):
-            todo.append((q, block, items))
-    print(f"{grader} ({model}){' again' if again else ''}: {len(todo)} questions", flush=True)
+            user = (
+                AGAIN.format(rule=RULE, block=block, items=", ".join(items))
+                if again
+                else USER.format(rule=RULE, block=block)
+            )
+            messages = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
+            out.append((q, items, messages))
+    return out
+
+
+def save(grader: str, q: str, items: list[str], text: str, *, again: bool = False) -> bool:
+    """Parse one reply and append its grades; False when it is not a valid reply."""
+    try:
+        reply = jd.extract_json(text)
+        grades = parse(reply, items, again=again)
+    except (ValueError, json.JSONDecodeError):
+        return False
+    row: dict[str, Any] = {"q": q, "grades": grades, "model": MODELS[grader]}
+    if again:
+        row["reasons"] = {k: str((reply.get(k) or {}).get("reason", ""))[:400] for k in items}
+    with _lock, path(grader, again=again).open("a", encoding="utf-8") as f:
+        f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    return True
+
+
+def grade(grader: str, *, again: bool = False) -> None:
+    """``grader``'s share through the router, one call per question, appended as each returns. A
+    rate limit past the router's retries ends the run cleanly; a rerun asks what is left."""
+    if grader == "qwen27":
+        raise SystemExit("Qwen 27B grades on Modal: scripts/qwen27.py")
+    an.env()
+    model = MODELS[grader]
+    jobs = todo(grader, again=again)
+    print(f"{grader} ({model}){' again' if again else ''}: {len(jobs)} questions", flush=True)
     stopped: list[str] = []
 
-    def one(job: tuple[str, str, list[str]]) -> None:
-        if stopped:
-            return
-        q, block, items = job
-        user = (
-            AGAIN.format(rule=RULE, block=block, items=", ".join(items))
-            if again
-            else USER.format(rule=RULE, block=block)
-        )
-        messages = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
+    def one(job: tuple[str, list[str], list[dict[str, str]]]) -> None:
+        q, items, messages = job
         for _ in range(3):
             if stopped:
                 return
             try:
-                reply = jd.extract_json(router.chat(model, messages)["content"])
-                grades = parse(reply, items, again=again)
+                text = router.chat(model, messages)["content"]
             except (router.BudgetExceededError, router.RouterError) as exc:
                 stopped.append(repr(exc)[:300])
                 return
-            except (ValueError, json.JSONDecodeError):
-                continue
-            row: dict[str, Any] = {"q": q, "grades": grades, "model": model}
-            if again:
-                row["reasons"] = {
-                    k: str((reply.get(k) or {}).get("reason", ""))[:400] for k in items
-                }
-            with _lock, path(grader, again=again).open("a", encoding="utf-8") as f:
-                f.write(json.dumps(row, ensure_ascii=False) + "\n")
-            return
+            if save(grader, q, items, text, again=again):
+                return
         print(f"{q}: no valid reply, asked again on the next run", flush=True)
 
     with ThreadPoolExecutor(WORKERS) as pool:
-        list(pool.map(one, todo))
-    left = sum(1 for q, _, items in todo if not set(items) <= set(done(grader, again=again)))
+        list(pool.map(one, jobs))
+    left = len(todo(grader, again=again))
     if stopped:
         print(f"STOPPED: {stopped[0]}; {left} questions left", flush=True)
     print(json.dumps({"left": left, "ledger": router.ledger().get(model, {})}))
