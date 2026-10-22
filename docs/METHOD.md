@@ -20,13 +20,14 @@ Icecat products in a probe of 300). Requests: at most 8 at a time, about 10 per 
 **Eligible** when all hold:
 
 1. Both sheets return `OK`, and the French sheet's local title is in French.
-2. The English category name, lower-cased, contains one of: laptop, notebook, tablet, pc, workstation, monitor,
+2. A word of the English category name, lower-cased, starts with one of: laptop, notebook, tablet, pc, workstation, monitor,
    smartphone, mobile phone, smartwatch, headphone, headset, earphone, speaker, soundbar, tv, television, projector,
    camera, e-book, power bank, console, printer, keyboard, mouse, mice, router, hard drive, solid state drive,
    flash drive, vacuum, coffee, kettle, toaster, blender, food processor, microwave, hair, shaver, toothbrush, iron,
    fryer, fan, air purifier, heater, dishwasher, washing machine, refrigerator, fridge, freezer, oven, dryer, hob,
    cooker; and none of: spare part, accessor, case, cover, cable, mount, bag, part, screen protector, warranty,
-   replacement, filter, stand, dock, adapter, ink, toner, licence, license. Fashion and grocery are not covered.
+   replacement, filter, stand, dock, adapter, ink, toner, licence, license (so "hair" does not match "chairs").
+   Fashion and grocery are not covered.
 3. Both sheets have at least 15 features with a value.
 4. At most 2 products per (brand, category) are taken; later ones are skipped.
 
@@ -35,10 +36,14 @@ Icecat products in a probe of 300). Requests: at most 8 at a time, about 10 per 
 - **Dev:** the first 10. Used only to check the prompt and the scripts; never in the battery.
 - **Type E (energy):** the next 12 whose sheets have an energy efficiency class (feature 2705) and a feature whose
   English name starts with "Energy consumption" or "Power consumption".
-- **Type B (fit under budget):** the next 12 whose category has two more eligible, unused products; those two are
-  its companions (the first two in draw order), used in no other question.
-- **Types A, C, D:** the rest in draw order, 12 each; type C needs a weight (feature 94) and one more feature
-  whose value starts with a number.
+- **Type B (fit under budget):** the next 12 whose category has two more eligible, unused products such that the
+  three share a numeric feature (below) with values v1 ≥ v2 > v3; the companions are the first two such products in
+  draw order, used in no other question.
+- **Type C (spec facts):** the next 12 with a weight (feature 94) and one more numeric feature.
+- **Types A and D:** the rest in draw order, alternately A then D, 12 each.
+
+A **numeric feature** has an English value that is a number with at most one unit ("80 Wh", "2.4 kg", "43 dB",
+"16"), and is not weight, not in the packaging group, and not a yes/no. Weight is used only in type C.
 - If the draw ends short: what passes is used if at least 40 products (plan, risks), and the count is stated.
 
 ## 2. Listings and offers
@@ -50,7 +55,8 @@ Icecat products in a probe of 300). Requests: at most 8 at a time, about 10 per 
 `random.Random(20261022 + Icecat ID)`. Offers are as of **Monday 2 November 2026**, stated above them. Each product
 gets 3 or 4 offers from fictional merchants (Boutique A–D in French, Shop A–D in English): price, an optional old
 price, shipping, an estimated delivery date, a return window and stock. The French and English offers hold the same
-values, written as merchants in each language write them:
+values, written as merchants in each language write them (French with no-break spaces before "€" and between digit
+groups):
 
 - French: `Boutique A — Prix : 279,99 € (au lieu de 329,99 €) — Livraison : 4,99 € — Livraison estimée le jeudi 5
   novembre 2026 — Retours sous 30 jours — En stock`
@@ -62,8 +68,9 @@ large appliances €249–1,299), ending in .99 or .00. Offers vary around it by
 €2.99–9.99; delivery 1 to 8 working days after the offers' date; returns 14, 30 or 60 days.
 
 **Traps** (each offer set holds at least one): a struck-through old price; a lower price whose shipping makes the
-total higher; the cheapest offer out of stock. Type A always has 4 offers and all three. Other types have the
-struck-through price and one of the other two.
+total higher; the cheapest offer out of stock. Type A always has 4 offers and all three. Types C, D and E have the
+struck-through price and one of the other two (3 offers), plus one plain offer when the seed gives 4. Type B has
+one offer per product: the shipping trap below, and a struck-through old price on one of the three.
 
 ## 3. Questions (in English for both halves, so only the listing language differs)
 
@@ -72,7 +79,7 @@ struck-through price and one of the other two.
 | A. Best price | "Where is this cheapest, delivered, from a shop that has it in stock?" / "Which shop gives me the lowest total price including delivery?" / "Where should I buy this to pay the least, shipping included?" |
 | B. Fit under budget | "Which of these three has a {feature} of at least {value} and costs under €{budget} delivered?" Three listings, one offer each. The feature is the numeric one the three share with the most distinct values (ties by the seed); the threshold is the second-highest value, so two qualify on the spec; of those, one is under the budget delivered and the other only before shipping; the third is the cheapest. |
 | C. Spec facts | "How much does it weigh, and what is its {feature}?" The feature is drawn by the seed from the numeric features other than weight and packaging. |
-| D. Delivery and returns | "Which shop delivers by {weekday day month} and takes returns for at least {N} days?" Offers built so that exactly one meets both: one other delivers in time with a shorter return window, one other has the returns but arrives later. |
+| D. Delivery and returns | "Which shop delivers by {weekday day month} and takes returns for at least 30 days?" Offers built so that exactly one in-stock offer meets both: one other delivers in time with a shorter return window, one other has the returns but arrives later; an out-of-stock offer meets neither. |
 | E. Energy | "What is its energy efficiency class and its {consumption feature}?" |
 
 Offers, traps and questions are written without looking at the claim check's patterns, and the checker is not run
@@ -150,4 +157,6 @@ about $1. Neither runs before your spend go.
 
 ## Changes
 
-None yet.
+- 2026-10-22, before any download: category words match at the start of a word; the order in which types B, C,
+  A and D are filled, and what a numeric feature is, made exact; type B's traps and D's out-of-stock offer stated;
+  French offers use no-break spaces.
