@@ -10,6 +10,12 @@ environment that holds only the verifier's stop 76 build (0.4.0), so the contain
   uv run --isolated --no-project --with modal --with legal-rag-verifier==0.4.0 \
     modal run scripts/judge1b.py::run --split battery --model flash --totals
 
+Test 2's arms 4 and 4t (docs/METHOD2.md §6) run the same way with ``--judge run3``, the judge
+trained on product sentences (``scripts/test2_modal.py::train``); ``labels`` gives V1's labels:
+
+  uv run --with modal modal run scripts/judge1b.py::run --split battery --model flash --judge run3
+  uv run --with modal modal run scripts/judge1b.py::labels --judge run3
+
 Sends the listings, offers, questions and the sentences the claim check passed; returns labels.
 """
 
@@ -34,6 +40,13 @@ ADAPTER = "azterizm/minicpm5-1b-clause-judge"
 ADAPTER_REVISION = "7cd8ee5f54e53b0268bdab49b0e5a48fe99ef0d0"
 RUN = "run2"  # stop 64: trained on both pools
 MERGED = "/runs/minicpm5-1b-run2-merged"
+# The judges this script serves: the published run2, merged here, and test 2's run3, merged by
+# scripts/test2_modal.py on the same volume.
+JUDGES = {RUN: MERGED, "run3": "/runs/minicpm5-1b/run3/merged"}
+MODEL_IDS = {
+    RUN: f"{ADAPTER}@{ADAPTER_REVISION}/{RUN}",
+    "run3": "product-answer-checks test 2/run3",
+}
 SAMPLING = {"temperature": 0, "max_tokens": 1024, "seed": 0}
 TEMPLATE = {"enable_thinking": False}
 PORT = 30000
@@ -104,12 +117,15 @@ def _wait(server: "subprocess.Popen[bytes]", url: str, limit: float = 1500) -> N
 @app.cls(image=serve_image, gpu=GPU, volumes={"/runs": runs}, timeout=3600, max_containers=1,
          scaledown_window=60)  # fmt: skip
 class Judge1B:
+    judge: str = modal.parameter(default=RUN)
+
     @modal.enter()
     def start(self) -> None:
         self.started = time.time()
+        self.path = JUDGES[self.judge]
         self.server = subprocess.Popen(  # noqa: S603
             [
-                sys.executable, "-m", "sglang.launch_server", "--model-path", MERGED,
+                sys.executable, "-m", "sglang.launch_server", "--model-path", self.path,
                 "--port", str(PORT), "--mem-fraction-static", "0.85", "--context-length", "65536",
             ]
         )  # fmt: skip
@@ -122,7 +138,12 @@ class Judge1B:
         self.server.terminate()
 
     def chat(self, messages: list[dict[str, str]]) -> dict[str, Any]:
-        body = {"model": MERGED, "messages": messages, **SAMPLING, "chat_template_kwargs": TEMPLATE}
+        body = {
+            "model": self.path,
+            "messages": messages,
+            **SAMPLING,
+            "chat_template_kwargs": TEMPLATE,
+        }
         request = urllib.request.Request(  # noqa: S310 - the container's own server
             f"{self.url}/v1/chat/completions",
             data=json.dumps(body).encode(),
@@ -149,7 +170,7 @@ class Judge1B:
         server = self
 
         class OneB:
-            model_id = f"{ADAPTER}@{ADAPTER_REVISION}/{RUN}"
+            model_id = MODEL_IDS[server.judge]
 
             def __init__(self) -> None:
                 self.prefix = ""
@@ -193,6 +214,18 @@ class Judge1B:
             results = list(pool.map(one, jobs))
         return {"results": results, "seconds": time.time() - t0, "startup": self.startup}
 
+    @modal.method()
+    def labels(self, prompts: dict[str, str]) -> dict[str, Any]:
+        """Test 2's V1: the judge's short reply to each prompt, one at a time, by prompt hash."""
+        import judge as jd  # type: ignore[import-not-found]  # noqa: PLC0415
+
+        t0 = time.time()
+        out = {}
+        for sha, user in prompts.items():
+            label = jd.ask(self.chat, user)
+            out[sha] = {k: label.get(k) for k in ("label", "passage", "ms", "attempts")}
+        return {"labels": out, "seconds": time.time() - t0, "startup": self.startup}
+
 
 # ---------------------------------------------------------------------- local side
 def _ledger() -> Any:
@@ -213,7 +246,13 @@ def merge() -> None:
 
 
 @app.local_entrypoint()
-def run(split: str = "battery", model: str = "flash", totals: bool = False) -> None:  # noqa: FBT001, FBT002
+def run(
+    split: str = "battery",
+    model: str = "flash",
+    totals: bool = False,  # noqa: FBT001, FBT002
+    judge: str = RUN,
+) -> None:
+    """Arm 3 or 3t with ``run2``; test 2's arm 4 or 4t with ``--judge run3``."""
     ledger = _ledger()
     sys.path.insert(0, str(ROOT / "src"))
     sys.path.insert(0, str(ROOT / "scripts"))
@@ -227,8 +266,10 @@ def run(split: str = "battery", model: str = "flash", totals: bool = False) -> N
     questions = {q.qid: q for q in an.sealed(split)}
     rows = ck.path(split, "claims76" if totals else "claims", model).read_text().splitlines()
     first = {r["qid"]: r for r in map(json.loads, rows)}
-    out = ck.path(split, "judge1b76" if totals else "judge1b", model)
-    arm = "arm 3t" if totals else "arm 3"
+    name = ("judge1b76" if totals else "judge1b") + ("" if judge == RUN else f"-{judge}")
+    out = ck.path(split, name, model)
+    arm = ("arm 3" if judge == RUN else "test2 arm 4") + ("t" if totals else "")
+    stage = "" if judge == RUN else "test2"
     done = out.read_text(encoding="utf-8").splitlines() if out.exists() else []
     have = {r["qid"] for r in map(json.loads, done)}
     jobs = [
@@ -237,12 +278,12 @@ def run(split: str = "battery", model: str = "flash", totals: bool = False) -> N
         for qid, r in sorted(first.items()) if qid not in have
     ]  # fmt: skip
     print(f"{split} {model}: {len(jobs)} answers to check", flush=True)
-    judge = Judge1B()
+    server = Judge1B(judge=judge)
     startup_recorded = False
     for start in range(0, len(jobs), CHUNK):
-        ledger.check(GPU, 900)
+        ledger.check(GPU, 900, stage)
         t0 = time.time()
-        reply = judge.check.remote(jobs[start : start + CHUNK])
+        reply = server.check.remote(jobs[start : start + CHUNK])
         if totals and any(r["config"].get("totals") != "line" for r in reply["results"]):
             raise SystemExit("the container's verifier is not running totals")
         seconds = reply["seconds"] + (0 if startup_recorded else reply["startup"])
@@ -267,6 +308,31 @@ def run(split: str = "battery", model: str = "flash", totals: bool = False) -> N
                 f.write(json.dumps(row, ensure_ascii=False) + "\n")
         print(
             f"{len(reply['results'])} answers, {reply['seconds']:.0f} s; "
-            f"Modal ${ledger.spent():.2f}",
+            f"Modal {stage or 'test 1'} ${ledger.spent(stage):.2f}",
             flush=True,
         )
+
+
+@app.local_entrypoint()
+def labels(judge: str = "run3") -> None:
+    """Test 2's V1 (METHOD2 §6): the judge on the validation clauses' prompts, labels appended."""
+    ledger = _ledger()
+    folder = ROOT / "results/raw/test2"
+    rows = (folder / "run3/validation.jsonl").read_text(encoding="utf-8").splitlines()
+    prompts = {r["sha"]: r["messages"][1]["content"] for r in map(json.loads, rows)}
+    out = folder / f"labels.{judge}.jsonl"
+    done = out.read_text(encoding="utf-8").splitlines() if out.exists() else []
+    have = {r["sha"] for r in map(json.loads, done)}
+    todo = {k: v for k, v in prompts.items() if k not in have}
+    print(f"{judge}: {len(todo)} validation prompts to label", flush=True)
+    if not todo:
+        return
+    ledger.check(GPU, 900, "test2")
+    t0 = time.time()
+    reply = Judge1B(judge=judge).labels.remote(todo)
+    seconds = max(reply["seconds"] + reply["startup"], time.time() - t0)
+    ledger.record(f"test2 labels {judge}", GPU, seconds, f"{len(reply['labels'])} prompts")
+    with out.open("a", encoding="utf-8") as f:
+        for sha, label in reply["labels"].items():
+            f.write(json.dumps({"sha": sha, **label}) + "\n")
+    print(f"{len(reply['labels'])} labels; Modal test2 ${ledger.spent('test2'):.2f}", flush=True)

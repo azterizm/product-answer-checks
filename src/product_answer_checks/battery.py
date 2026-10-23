@@ -84,10 +84,13 @@ def _letter(offers: list[of.Offer], role: str) -> str:
     return "ABCD"[next(i for i, o in enumerate(offers) if o.role.startswith(role))]
 
 
-def single_questions(qid: str, type_: str, pid: int, sheets: Sheets) -> list[Question]:
-    """Types A, C, D and E: one product, its offers, one question; same values in both languages."""
+def single_questions(
+    qid: str, type_: str, pid: int, sheets: Sheets, *, seed: int | None = None
+) -> list[Question]:
+    """Types A, C, D and E: one product, its offers, one question; same values in both languages.
+    ``seed`` defaults to test 1's (``SEED + pid``)."""
     en = sheets(pid, "en")
-    rng = random.Random(SEED + pid)
+    rng = random.Random(SEED + pid if seed is None else seed)
     offers = of.single(type_, sh.price_band(sh.category(en)), rng)
     intended: dict[str, Any]
     if type_ == "A":
@@ -133,10 +136,16 @@ def single_questions(qid: str, type_: str, pid: int, sheets: Sheets) -> list[Que
 
 
 def budget_questions(
-    qid: str, pid: int, companions: Sequence[int], fid: str, sheets: Sheets
+    qid: str,
+    pid: int,
+    companions: Sequence[int],
+    fid: str,
+    sheets: Sheets,
+    *,
+    seed: int | None = None,
 ) -> list[Question]:
     """Type B: three products sharing a numeric feature, one offer each (METHOD §3)."""
-    rng = random.Random(SEED + pid)
+    rng = random.Random(SEED + pid if seed is None else seed)
     order = [pid, *companions]
     rng.shuffle(order)
     values = {p: sh.numeric_features(sheets(p, "en"))[fid].value for p in order}

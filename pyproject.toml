@@ -64,7 +64,9 @@ strict = true
 warn_unreachable = true
 mypy_path = "src"
 files = ["src", "tests", "scripts"]
-exclude = ["^scripts/judge1b\\.py$", "^scripts/qwen27\\.py$"]  # runs under `uv run --with modal`
+exclude = [  # these run under `uv run --with modal`
+    "^scripts/judge1b\\.py$", "^scripts/qwen27\\.py$", "^scripts/test2_modal\\.py$",
+]
 
 [tool.pytest.ini_options]
 minversion = "8.0"

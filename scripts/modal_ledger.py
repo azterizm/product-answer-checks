@@ -1,5 +1,6 @@
-"""Modal spend for test 1, as the verifier's ``modal_ledger.py``: GPU time at list prices plus 15 %,
-recorded when each run returns, with a hard cap (docs/METHOD.md, Changes)."""
+"""Modal spend, as the verifier's ``modal_ledger.py``: GPU time at list prices plus 15 %, recorded
+when each run returns, with a hard cap: test 1's (docs/METHOD.md, Changes) and test 2's, whose runs
+are named ``test2 …`` (docs/METHOD2.md §7)."""
 
 from __future__ import annotations
 
@@ -11,9 +12,10 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 LEDGER = ROOT / "results/raw/modal_ledger.json"
-PER_HOUR = {"L40S": 1.95, "CPU": 0.10}
+PER_HOUR = {"L4": 0.80, "L40S": 1.95, "H100": 3.95, "CPU": 0.10}
 OVERHEAD = 1.15
-CAP = 3.0
+CAP = 3.0  # test 1
+STAGES = {"test2": 5.0}  # your go, 2026-10-23
 
 
 def usd(gpu: str, seconds: float) -> float:
@@ -27,13 +29,19 @@ def entries() -> list[dict[str, Any]]:
     return data
 
 
-def spent() -> float:
-    return round(sum(float(e["usd"]) for e in entries()), 4)
+def _stage(run: str) -> str:
+    return next((s for s in STAGES if run.startswith(f"{s} ")), "")
 
 
-def check(gpu: str, estimate_seconds: float) -> None:
-    if spent() + usd(gpu, estimate_seconds) > CAP:
-        raise SystemExit(f"Modal: ${spent():.2f} spent, cap ${CAP:.2f}")
+def spent(stage: str = "") -> float:
+    """Spend of test 1's runs, or of one stage's."""
+    return round(sum(float(e["usd"]) for e in entries() if _stage(e["run"]) == stage), 4)
+
+
+def check(gpu: str, estimate_seconds: float, stage: str = "") -> None:
+    cap = STAGES[stage] if stage else CAP
+    if spent(stage) + usd(gpu, estimate_seconds) > cap:
+        raise SystemExit(f"Modal {stage or 'test 1'}: ${spent(stage):.2f} spent, cap ${cap:.2f}")
 
 
 def record(run: str, gpu: str, seconds: float, note: str = "") -> None:
