@@ -5,10 +5,9 @@ it passes, the judge on one Modal L40S. Paid: run only on a go; Modal spend is c
   uv run --with modal modal run scripts/judge1b.py::run --split battery --model flash
 
 Arm 3t (METHOD, Changes 2026-10-23) runs on arm 2t's verdicts with ``totals="line"``, from an
-environment that holds only the verifier's stop 76 build, so that build is what the container gets:
+environment that holds only the verifier's stop 76 build (0.4.0), so the container gets that build:
 
-  uv run --isolated --no-project --with modal \
-    --with "legal-rag-verifier @ git+file://<the verifier repo>@<check.TOTALS>" \
+  uv run --isolated --no-project --with modal --with legal-rag-verifier==0.4.0 \
     modal run scripts/judge1b.py::run --split battery --model flash --totals
 
 Sends the listings, offers, questions and the sentences the claim check passed; returns labels.

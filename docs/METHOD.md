@@ -252,4 +252,7 @@ about $1. Neither runs before your spend go.
   19 (28), none wrong. The reading rule computed for 3t, as information: false on both. On the 306 sentences the
   judge saw with the same input in arm 3 and arm 3t, its verdict differed on 4 (one of them a wrong sentence 3t
   keeps): the server is not exactly repeatable. Modal $0.38 with the smoke run and the lost attempt ($1.22 of $3).
+- 2026-10-23, after the runs: the verifier released `9ab6603` as 0.4.0, its code unchanged (no line of `src/`
+  differs). From PyPI, 0.4.0 with `totals="line"` gives arm 2t's verdicts on all 280 answers. Arms 2t and 3t now
+  take it from PyPI (`legal-rag-verifier==0.4.0`) instead of the verifier's local repository.
 

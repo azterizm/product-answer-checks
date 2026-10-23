@@ -121,7 +121,8 @@ def test_the_totals_flag_reaches_the_config() -> None:
     )
     assert out.returncode != 0
     assert "totals" in out.stderr
-    assert check.TOTALS.startswith("9ab6603")
+    assert check.TOTALS == "9ab6603"
+    assert check.TOTALS_RELEASE == "legal-rag-verifier==0.4.0"
 
 
 def test_euro_amounts_are_read_without_the_checker() -> None:

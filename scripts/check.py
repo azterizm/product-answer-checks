@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 import threading
@@ -39,9 +38,10 @@ OUT = ROOT / "results/raw/checked"
 OTHER = {"flash": "opus46", "opus46": "flash"}
 OLD = "legal-rag-verifier==0.2.0"
 PINNED = "66450a6"  # the build the runs used, released as 0.3.0; 0.2.0 reports its version wrongly
-# Arm 2t (METHOD, Changes 2026-10-23): the verifier's stop 76 build, unreleased, from its repo.
-TOTALS = "9ab66032ae462b4c8438a200182110414c052518"
-VERIFIER_REPO = Path(os.environ.get("VERIFIER_REPO", ROOT.parent / "legal-rag-verifier"))
+# Arms 2t and 3t (METHOD, Changes 2026-10-23): the verifier's stop 76 build, the one the runs used,
+# released unchanged as 0.4.0.
+TOTALS = "9ab6603"
+TOTALS_RELEASE = "legal-rag-verifier==0.4.0"
 _lock = threading.Lock()
 
 
@@ -163,7 +163,7 @@ def totals(set_: str, name: str) -> None:
     2 file too); any difference stops the run. On dev, only the expected sentences may change."""
     jobs, answers = claim_jobs(set_, name)
     offers = {q.qid: q.offers for q in an.sealed(set_)}
-    build = isolated(f"legal-rag-verifier @ git+file://{VERIFIER_REPO}@{TOTALS}")
+    build = isolated(TOTALS_RELEASE)
     reference = run_claimcheck([sys.executable], jobs)
     control = run_claimcheck(build, jobs)
     stored = path(set_, "claims", name)
@@ -175,7 +175,7 @@ def totals(set_: str, name: str) -> None:
     if moved or set(control) != set(reference):
         raise SystemExit(f"control: totals off differs from arm 2 on {moved or 'the answer set'}")
     after = run_claimcheck(build, jobs, "--totals")
-    write(set_, "claims76", name, claim_rows(jobs, answers, after, f"{TOTALS[:7]} totals=line"))
+    write(set_, "claims76", name, claim_rows(jobs, answers, after, f"{TOTALS} totals=line"))
     diff = changes(reference, after, offers)
     print(
         f"{set_} claims76 {name}: {len(after)} answers; control same as arm 2; "

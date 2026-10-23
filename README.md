@@ -40,7 +40,7 @@ Gemini 3.8 Flash: 262 sentences, none wrong.
   it removed 25 correct sentences instead of 106: 81 of the 94 that state such a total were kept. Empty answers
   fell from 9 to 2. It kept 9 more wrong sentences. Each states a correct total inside a wrong claim, such as
   the wrong cheapest shop or a budget it does not meet. A wrong sum, "€311.00 + €4.99 = €316.99", is still
-  removed. It runs on the claim check's next build, not yet released.
+  removed. It needs the claim check's 0.4.0, released 23 Oct, with `totals="line"`.
 - With the 1B model after it, the claim check with totals removed 114 correct sentences instead of 148 and
   kept 9 wrong ones instead of 5. The 1B model removed 6 of the 9 wrong sentences that totals let through. Run
   twice on the same input, the 1B model gave a different verdict on 4 of 306 sentences.
@@ -91,7 +91,7 @@ Settings can be kept in a `.env` file in the repository root. The tests need non
 uv run python scripts/fetch_icecat.py rebuild
 uv run python scripts/answer.py battery flash
 uv run python scripts/check.py claims battery flash
-uv run python scripts/check.py claims76 battery flash   # totals: the verifier repo next to this one
+uv run python scripts/check.py claims76 battery flash   # totals: 0.4.0 from PyPI
 uv run --with modal modal run scripts/judge1b.py::run --split battery --model flash
 uv run python scripts/grade.py sheet
 uv run --with modal modal run scripts/qwen27.py::run
@@ -107,4 +107,4 @@ The `battery` folder holds the product IDs, offers, questions, prompt and a hash
   included. Each user downloads it with their own account.
 - Code, offers and questions: [AGPL-3.0](LICENSE).
 - Claim check: [legal-rag-verifier](https://github.com/azterizm/legal-rag-verifier) 0.3.0; the totals rows
-  use its build `9ab6603`.
+  0.4.0.
