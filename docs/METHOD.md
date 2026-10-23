@@ -244,4 +244,12 @@ about $1. Neither runs before your spend go.
   Time is arm 2t's claim check plus the container's judge time. Reported: the §8 row, the wrong sentences arm 3t
   keeps that arm 3 removed, and the reading rule of §8 computed for 3t against arm 1 beside arm 3's, as
   information: that rule was fixed for arm 3, not for 3t. Spend: about $0.25, under the ledger's $3 cap.
+- 2026-10-23, arm 3t ran: the dev smoke run (Opus 4.6, 20 answers) confirmed the container's verifier had
+  `totals="line"`. The battery's first Opus 4.6 attempt lost its client at 16:10; the app stopped and returned
+  nothing (about 180 s of L40S, recorded in the ledger by hand). The run was started again and returned all 120;
+  Flash's ran once. Opus 4.6: wrong kept 9 (5 prices), right removed 114, empty 21, 0.19 s; arm 3: 5 (2), 148, 33,
+  0.13 s. The 1B removes 6 of the 9 wrong sentences arm 2t newly keeps. Flash: right removed 87 (arm 3: 108), empty
+  19 (28), none wrong. The reading rule computed for 3t, as information: false on both. On the 306 sentences the
+  judge saw with the same input in arm 3 and arm 3t, its verdict differed on 4 (one of them a wrong sentence 3t
+  keeps): the server is not exactly repeatable. Modal $0.38 with the smoke run and the lost attempt ($1.22 of $3).
 

@@ -18,6 +18,7 @@ Claude Opus 4.6: 288 sentences, 32 wrong.
 | Claim check of prices, dates and units | 21 | 3 | 106 | 6 ms |
 | Claim check with totals (added 23 Oct) | 30 | 12 | 25 | 6.5 ms |
 | Claim check, then a 1B model | 5 | 2 | 148 | 0.13 s |
+| Claim check with totals, then the 1B model (23 Oct) | 9 | 5 | 114 | 0.19 s |
 
 Gemini 3.8 Flash: 262 sentences, none wrong.
 
@@ -28,6 +29,7 @@ Gemini 3.8 Flash: 262 sentences, none wrong.
 | Claim check of prices, dates and units | 0 | 75 | 6 ms |
 | Claim check with totals (added 23 Oct) | 0 | 11 | 6.6 ms |
 | Claim check, then a 1B model | 0 | 108 | 0.14 s |
+| Claim check with totals, then the 1B model (23 Oct) | 0 | 87 | 0.14 s |
 
 - A second model removed every wrong sentence. It also removed about one in three correct sentences and added
   seconds to each answer.
@@ -39,6 +41,9 @@ Gemini 3.8 Flash: 262 sentences, none wrong.
   fell from 9 to 2. It kept 9 more wrong sentences. Each states a correct total inside a wrong claim, such as
   the wrong cheapest shop or a budget it does not meet. A wrong sum, "€311.00 + €4.99 = €316.99", is still
   removed. It runs on the claim check's next build, not yet released.
+- With the 1B model after it, the claim check with totals removed 114 correct sentences instead of 148 and
+  kept 9 wrong ones instead of 5. The 1B model removed 6 of the 9 wrong sentences that totals let through. Run
+  twice on the same input, the 1B model gave a different verdict on 4 of 306 sentences.
 - The claim check followed by the 1B model removed most wrong sentences in 0.13 s. It removed the most correct
   sentences. It did not meet the pass rule set before the test.
 - French listings now lose about as many correct sentences as English listings: 36 and 39 for Flash, 51 and 55
@@ -78,7 +83,7 @@ Requirements:
 - An Open Icecat account. Set `ICECAT_USERNAME`.
 - An OpenAI compatible endpoint at `localhost:8317` that serves `claude-opus-4-6-thinking` and
   `gemini-3.8-flash-high`. Set `LLM_ROUTER_KEY`.
-- A [Modal](https://modal.com) account for the 1B model and Qwen 27B. This run cost $0.84.
+- A [Modal](https://modal.com) account for the 1B model and Qwen 27B. Test 1 cost $0.84, the totals rows $0.38.
 
 Settings can be kept in a `.env` file in the repository root. The tests need none of them: `uv run pytest`.
 
