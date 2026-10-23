@@ -3,6 +3,7 @@
   "1 other model": "Opus 4.6's answers: Flash on the router; Flash's: Qwen 27B on one L40S",
   "2 claim check": "CPU (Apple Mac)",
   "2b claim check 0.2.0": "CPU (Apple Mac)",
+  "2t claim check with totals": "CPU (Apple Mac)",
   "3 claim check then 1B": "CPU, then one L40S"
  },
  "arm1_judge": {
@@ -85,6 +86,18 @@
      "empty": 16,
      "seconds_added_median": 0.0062
     },
+    "2t claim check with totals": {
+     "answers": 60,
+     "sentences": 129,
+     "wrong_kept": 0,
+     "right_removed": 6,
+     "wrong_removed": 0,
+     "right_kept": 123,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 0,
+     "seconds_added_median": 0.0071
+    },
     "3 claim check then 1B": {
      "answers": 60,
      "sentences": 129,
@@ -143,6 +156,17 @@
      "unsettled_removed": 0,
      "seconds_added_median": 0.0062
     },
+    "2t claim check with totals": {
+     "answers": 60,
+     "sentences": 48,
+     "wrong_kept": 0,
+     "right_removed": 5,
+     "wrong_removed": 0,
+     "right_kept": 43,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "seconds_added_median": 0.0071
+    },
     "3 claim check then 1B": {
      "answers": 60,
      "sentences": 48,
@@ -192,6 +216,18 @@
      "empty": 4,
      "seconds_added_median": 0.0055
     },
+    "2t claim check with totals": {
+     "answers": 60,
+     "sentences": 133,
+     "wrong_kept": 0,
+     "right_removed": 5,
+     "wrong_removed": 0,
+     "right_kept": 128,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 1,
+     "seconds_added_median": 0.0059
+    },
     "3 claim check then 1B": {
      "answers": 60,
      "sentences": 133,
@@ -238,6 +274,17 @@
      "unsettled_kept": 0,
      "unsettled_removed": 0,
      "seconds_added_median": 0.0055
+    },
+    "2t claim check with totals": {
+     "answers": 60,
+     "sentences": 53,
+     "wrong_kept": 0,
+     "right_removed": 3,
+     "wrong_removed": 0,
+     "right_kept": 50,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "seconds_added_median": 0.0059
     },
     "3 claim check then 1B": {
      "answers": 60,
@@ -288,6 +335,18 @@
      "empty": 8,
      "seconds_added_median": 0.0063
     },
+    "2t claim check with totals": {
+     "answers": 120,
+     "sentences": 262,
+     "wrong_kept": 0,
+     "right_removed": 11,
+     "wrong_removed": 0,
+     "right_kept": 251,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 1,
+     "seconds_added_median": 0.0066
+    },
     "3 claim check then 1B": {
      "answers": 120,
      "sentences": 262,
@@ -301,7 +360,98 @@
      "seconds_added_median": 0.1377
     }
    },
-   "reading_costs_less_for_same_safety": false
+   "reading_costs_less_for_same_safety": false,
+   "totals": {
+    "sums_gap": 72,
+    "recovered": 64,
+    "not_recovered": [
+     {
+      "sentence": "B01-en#2",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "48"
+      ]
+     },
+     {
+      "sentence": "B01-fr#1",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:333.99",
+       "EUR:2.99",
+       "EUR:336.98"
+      ]
+     },
+     {
+      "sentence": "B03-en#2",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "254.6",
+       "EUR:64.99"
+      ]
+     },
+     {
+      "sentence": "B04-fr#1",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:545.99",
+       "EUR:543",
+       "EUR:2.99"
+      ]
+     },
+     {
+      "sentence": "B08-en#2",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "471"
+      ]
+     },
+     {
+      "sentence": "B10-fr#1",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:433.98",
+       "EUR:428.99",
+       "EUR:4.99"
+      ]
+     },
+     {
+      "sentence": "B11-fr#1",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:346.99",
+       "EUR:344",
+       "EUR:2.99"
+      ]
+     },
+     {
+      "sentence": "B12-fr#1",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:402.99",
+       "EUR:398"
+      ]
+     }
+    ],
+    "wrong_newly_kept": [],
+    "right_newly_removed": [],
+    "verdicts_changed": 64
+   }
   },
   "opus46": {
    "fr all": {
@@ -352,6 +502,18 @@
      "unsettled_removed": 0,
      "empty": 22,
      "seconds_added_median": 0.0062
+    },
+    "2t claim check with totals": {
+     "answers": 60,
+     "sentences": 142,
+     "wrong_kept": 13,
+     "right_removed": 11,
+     "wrong_removed": 2,
+     "right_kept": 116,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 1,
+     "seconds_added_median": 0.007
     },
     "3 claim check then 1B": {
      "answers": 60,
@@ -411,6 +573,17 @@
      "unsettled_removed": 0,
      "seconds_added_median": 0.0062
     },
+    "2t claim check with totals": {
+     "answers": 60,
+     "sentences": 77,
+     "wrong_kept": 9,
+     "right_removed": 6,
+     "wrong_removed": 1,
+     "right_kept": 61,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "seconds_added_median": 0.007
+    },
     "3 claim check then 1B": {
      "answers": 60,
      "sentences": 77,
@@ -460,6 +633,18 @@
      "empty": 4,
      "seconds_added_median": 0.0057
     },
+    "2t claim check with totals": {
+     "answers": 60,
+     "sentences": 146,
+     "wrong_kept": 17,
+     "right_removed": 14,
+     "wrong_removed": 0,
+     "right_kept": 115,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 1,
+     "seconds_added_median": 0.0059
+    },
     "3 claim check then 1B": {
      "answers": 60,
      "sentences": 146,
@@ -506,6 +691,17 @@
      "unsettled_kept": 0,
      "unsettled_removed": 0,
      "seconds_added_median": 0.0057
+    },
+    "2t claim check with totals": {
+     "answers": 60,
+     "sentences": 74,
+     "wrong_kept": 3,
+     "right_removed": 10,
+     "wrong_removed": 0,
+     "right_kept": 61,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "seconds_added_median": 0.0059
     },
     "3 claim check then 1B": {
      "answers": 60,
@@ -556,6 +752,18 @@
      "empty": 9,
      "seconds_added_median": 0.0062
     },
+    "2t claim check with totals": {
+     "answers": 120,
+     "sentences": 288,
+     "wrong_kept": 30,
+     "right_removed": 25,
+     "wrong_removed": 2,
+     "right_kept": 231,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 2,
+     "seconds_added_median": 0.0065
+    },
     "3 claim check then 1B": {
      "answers": 120,
      "sentences": 288,
@@ -569,7 +777,155 @@
      "seconds_added_median": 0.1276
     }
    },
-   "reading_costs_less_for_same_safety": false
+   "reading_costs_less_for_same_safety": false,
+   "totals": {
+    "sums_gap": 94,
+    "recovered": 81,
+    "not_recovered": [
+     {
+      "sentence": "B01-en#2",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:375.98",
+       "EUR:366.99",
+       "EUR:8.99"
+      ]
+     },
+     {
+      "sentence": "B01-en#4",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:375.98"
+      ]
+     },
+     {
+      "sentence": "B02-fr#1",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "76"
+      ]
+     },
+     {
+      "sentence": "B04-en#2",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:545.99",
+       "EUR:543",
+       "EUR:2.99"
+      ]
+     },
+     {
+      "sentence": "B06-en#1",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:74.98",
+       "EUR:66.99",
+       "EUR:7.99"
+      ]
+     },
+     {
+      "sentence": "B06-en#2",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:74.98"
+      ]
+     },
+     {
+      "sentence": "B07-en#2",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:956.99"
+      ]
+     },
+     {
+      "sentence": "B07-en#5",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "1854.2"
+      ]
+     },
+     {
+      "sentence": "B09-en#2",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:725.99"
+      ]
+     },
+     {
+      "sentence": "B10-en#2",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:467",
+       "EUR:7.99",
+       "EUR:474.99"
+      ]
+     },
+     {
+      "sentence": "B10-fr#1",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:433.98",
+       "EUR:428.99",
+       "EUR:4.99"
+      ]
+     },
+     {
+      "sentence": "B10-fr#2",
+      "reasons": [
+       "FIGURE_MISALIGNED"
+      ],
+      "failed": [
+       "EUR:474.99",
+       "EUR:467",
+       "EUR:7.99"
+      ]
+     },
+     {
+      "sentence": "B11-fr#2",
+      "reasons": [
+       "UNGROUNDED_FIGURE"
+      ],
+      "failed": [
+       "75"
+      ]
+     }
+    ],
+    "wrong_newly_kept": [
+     "A06-en#0",
+     "A06-fr#0",
+     "A09-fr#2",
+     "A11-en#1",
+     "A11-fr#0",
+     "B01-fr#1",
+     "B07-fr#0",
+     "B07-fr#1",
+     "B11-en#1"
+    ],
+    "right_newly_removed": [],
+    "verdicts_changed": 90
+   }
   }
  }
 }

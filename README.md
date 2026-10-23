@@ -16,6 +16,7 @@ Claude Opus 4.6: 288 sentences, 32 wrong.
 | No check | 32 | 13 | 0 | 0 |
 | Second model checks each sentence, Gemini 3.8 Flash | 0 | 0 | 94 | 12.6 s |
 | Claim check of prices, dates and units | 21 | 3 | 106 | 6 ms |
+| Claim check with totals (added 23 Oct) | 30 | 12 | 25 | 6.5 ms |
 | Claim check, then a 1B model | 5 | 2 | 148 | 0.13 s |
 
 Gemini 3.8 Flash: 262 sentences, none wrong.
@@ -25,6 +26,7 @@ Gemini 3.8 Flash: 262 sentences, none wrong.
 | No check | 0 | 0 | 0 |
 | Second model checks each sentence, Qwen 27B | 0 | 56 | 1.7 s |
 | Claim check of prices, dates and units | 0 | 75 | 6 ms |
+| Claim check with totals (added 23 Oct) | 0 | 11 | 6.6 ms |
 | Claim check, then a 1B model | 0 | 108 | 0.14 s |
 
 - A second model removed every wrong sentence. It also removed about one in three correct sentences and added
@@ -32,6 +34,11 @@ Gemini 3.8 Flash: 262 sentences, none wrong.
 - The claim check added milliseconds but kept most wrong sentences. Most errors were reasoning errors, such as a
   product said to be under budget when shipping puts it over. The check also removed correct sentences that
   state a total the model calculated.
+- The claim check with totals also accepts a figure equal to one offer's price plus its shipping. On Opus 4.6
+  it removed 25 correct sentences instead of 106: 81 of the 94 that state such a total were kept. Empty answers
+  fell from 9 to 2. It kept 9 more wrong sentences. Each states a correct total inside a wrong claim, such as
+  the wrong cheapest shop or a budget it does not meet. A wrong sum, "€311.00 + €4.99 = €316.99", is still
+  removed. It runs on the claim check's next build, not yet released.
 - The claim check followed by the 1B model removed most wrong sentences in 0.13 s. It removed the most correct
   sentences. It did not meet the pass rule set before the test.
 - French listings now lose about as many correct sentences as English listings: 36 and 39 for Flash, 51 and 55
@@ -79,6 +86,7 @@ Settings can be kept in a `.env` file in the repository root. The tests need non
 uv run python scripts/fetch_icecat.py rebuild
 uv run python scripts/answer.py battery flash
 uv run python scripts/check.py claims battery flash
+uv run python scripts/check.py claims76 battery flash   # totals: the verifier repo next to this one
 uv run --with modal modal run scripts/judge1b.py::run --split battery --model flash
 uv run python scripts/grade.py sheet
 uv run --with modal modal run scripts/qwen27.py::run
@@ -93,4 +101,5 @@ The `battery` folder holds the product IDs, offers, questions, prompt and a hash
 - Product data: [Open Icecat](https://icecat.biz), Open Content Licence, provided as is. Listing text is not
   included. Each user downloads it with their own account.
 - Code, offers and questions: [AGPL-3.0](LICENSE).
-- Claim check: [legal-rag-verifier](https://github.com/azterizm/legal-rag-verifier) 0.3.0.
+- Claim check: [legal-rag-verifier](https://github.com/azterizm/legal-rag-verifier) 0.3.0; the totals rows
+  use its build `9ab6603`.

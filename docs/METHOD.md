@@ -230,3 +230,9 @@ about $1. Neither runs before your spend go.
     answers, same split); nothing is graded again.
   - No reading rule: the counts are reported as they come. Arm 3 with totals (the 1B judge after arm 2t) needs
     Modal (about $0.25) and is not run without your go.
+- 2026-10-23, arm 2t ran: dev passed as fixed (the control equal to 0.3.0; 16 and 12 verdicts changed, exactly the
+  expected ones; "€316.99" still rolled back). The battery once, control equal to arm 2's stored verdicts. Opus
+  4.6: wrong kept 30 (12 prices), right removed 25, empty 2, against arm 2's 21 (3), 106, 9. The sums gap is 94,
+  81 recovered; the other 13 are 12 type B value-swap rollbacks and a bare number. 9 wrong sentences newly kept,
+  each a right total inside a wrong claim. Flash: right removed 11 (75), empty 1 (8), none wrong.
+
