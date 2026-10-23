@@ -119,6 +119,7 @@ sentence is dropped, as in stop 71. The premise for every check is the question'
 | 1 | The other model checks each sentence (stop 71's `check`, copied with its source commit) | Router |
 | 2 | Claim check, `legal-rag-verifier` 0.3.0 build | CPU |
 | 2b | Claim check, 0.2.0, French half only | CPU |
+| 2t | Claim check with totals (`totals="line"`), verifier build `9ab6603` (stop 76, unreleased); added 2026-10-23, see Changes | CPU |
 | 3 | Claim check, then the stop 64 1B judge (`azterizm/minicpm5-1b-clause-judge`) on the sentences it passes | CPU, then one Modal L40S (SGLang) |
 
 The 1B judge is used as published; it has never seen a product sentence, and is reported so.
@@ -208,3 +209,24 @@ about $1. Neither runs before your spend go.
   claim ("The cheapest option including shipping is Shop C ... for a total of €133.99"; the cheaper Shop D is out of
   stock, said in the answer's next sentence). You graded both right, after the report with them as ranges was
   published. Every count is now one number; the reading rule is unchanged (false on both generators).
+- 2026-10-23, before arm 2t ran on dev or the battery (your go, stop 76 in the verifier): **arm 2t, the claim
+  check with totals.** 94 of arm 2's 106 right sentences removed on Opus 4.6 state an offer's price plus shipping,
+  which the listing never prints. The verifier's build `9ab6603` adds one opt-in rule, `totals="line"`: a money
+  figure equal to two money figures of one currency on one line of the source, added, neither inside brackets (so
+  an offer's price plus its shipping, not its old price plus shipping), is grounded. Built on the 20 dev questions;
+  the battery's sentences were not read for it.
+  - Runs: dev, then the battery **once**, both generators, on CPU, through `scripts/claimcheck.py --totals` in an
+    environment with that build only. The same build with totals off must give arm 2's verdicts exactly, on dev
+    and on the battery (a control; any difference stops the run).
+  - Dev, before the battery: every sentence arm 2 rolled back whose only failed figures are one offer's price plus
+    non-free shipping is kept; "€316.99 (€311.00 + €4.99)" (dev09-en, a wrong total) still rolls back; no other
+    verdict changes.
+  - **The sums gap:** right sentences arm 2 removed that state a euro figure equal to one offer's price plus its
+    shipping, shipping not free, read from the committed offers (`battery/questions.jsonl`), not from the checker.
+    Counted per generator; on Opus 4.6 it is reported whether or not it is 94. **Recovered:** those arm 2t keeps.
+    The ones not recovered are listed with the reason arm 2t gives.
+  - Arm 2t gets the full row of §8 (wrong kept, wrong prices kept, right removed, empty, seconds), and the wrong
+    sentences it keeps that arm 2 removed are listed by question. The sentences and grades are test 1's (same
+    answers, same split); nothing is graded again.
+  - No reading rule: the counts are reported as they come. Arm 3 with totals (the 1B judge after arm 2t) needs
+    Modal (about $0.25) and is not run without your go.
