@@ -107,3 +107,50 @@ def test_the_graders_random_check_is_seeded_and_per_generator() -> None:
     first = grade.checks(key)
     assert first == grade.checks(key)
     assert len(first) == 2 * grade.CHECK_PER_GENERATOR
+
+
+def test_the_totals_flag_reaches_the_config() -> None:
+    # The installed 0.3.0 has no ``totals``: the flag must fail there, not be ignored.
+    row = {"qid": "A01-en", "premise": "Price: €279.99", "query": "Where?", "sentences": ["Hi."]}
+    out = subprocess.run(  # noqa: S603
+        [sys.executable, str(ROOT / "scripts/claimcheck.py"), "--totals"],
+        input=json.dumps(row) + "\n",
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert out.returncode != 0
+    assert "totals" in out.stderr
+    assert check.TOTALS.startswith("9ab6603")
+
+
+def test_euro_amounts_are_read_without_the_checker() -> None:
+    from scripts import report  # noqa: PLC0415
+
+    assert report.euro_cents("at **€908.98** (€903.99 + €4.99)") == {90898, 90399, 499}
+    assert report.euro_cents("a total of 60,98 € (50,99 € + 9,99 €)") == {6098, 5099, 999}
+    assert report.euro_cents("1 299,99 €, EUR 12.50, €1,299") == {129999, 1250, 129900}
+    assert report.euro_cents("by November 2026 120 € in all") == {12000}
+    assert report.euro_cents("Returns within 30 days.") == set()
+
+
+def test_offer_totals_leave_out_free_shipping() -> None:
+    offers = [{"price": 90399, "shipping": 499}, {"price": 24799, "shipping": 0}]
+    assert check.offer_totals(offers) == {90898}
+    assert check.only_totals_failed(["EUR:908.98"], {90898})
+    assert not check.only_totals_failed(["EUR:908.98", "5"], {90898})
+    assert not check.only_totals_failed(["EUR:316.99"], {90898})
+    assert not check.only_totals_failed([], {90898})
+
+
+def test_the_dev_check_compares_changed_with_expected() -> None:
+    offers = {"D09-en": [{"price": 31100, "shipping": 499}]}
+    reference = {
+        "D09-en": {
+            "verdicts": ["ROLLBACK", "ROLLBACK", "EMIT"],
+            "failed": [["EUR:315.99"], ["EUR:316.99"], []],
+        }
+    }
+    after = {"D09-en": {"verdicts": ["EMIT", "ROLLBACK", "EMIT"]}}
+    diff = check.changes(reference, after, offers)
+    assert diff == {"changed": [("D09-en", 0)], "expected": [("D09-en", 0)]}

@@ -12,6 +12,7 @@ import re
 import statistics
 import sys
 from collections.abc import Iterable, Mapping, Sequence
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,7 @@ ARMS = {
     "1 other model": "judge",
     "2 claim check": "claims",
     "2b claim check 0.2.0": "claims-020",
+    "2t claim check with totals": "claims76",
     "3 claim check then 1B": "judge1b",
 }
 ARM1_JUDGE = {"opus46": "gemini-3.8-flash-high (router)", "flash": "qwen27-ar4 (one L40S)"}
@@ -36,15 +38,41 @@ HARDWARE = {
     "1 other model": "Opus 4.6's answers: Flash on the router; Flash's: Qwen 27B on one L40S",
     "2 claim check": "CPU (Apple Mac)",
     "2b claim check 0.2.0": "CPU (Apple Mac)",
+    "2t claim check with totals": "CPU (Apple Mac)",
     "3 claim check then 1B": "CPU, then one L40S",
 }
 PRICE = re.compile(r"€|\bEUR\b|euro", re.IGNORECASE)
 MARGIN = 2  # the reading rule: at most 2 more wrong sentences kept than arm 1
+# A euro amount as the answers write it, read here and not by the checker (METHOD, Changes
+# 2026-10-23): "€1,234.56", "€ 908.98", "EUR 60.98", "1 234,56 €", "60,98 €", "567.98 €".
+_AMOUNT = (
+    r"\d{1,3}(?:,\d{3})+(?:\.\d{2})?"
+    r"|\d{1,3}(?:[ \u00a0\u202f]\d{3})+(?:,\d{2})?"
+    r"|\d+(?:[.,]\d{2})?"
+)
+EURO = re.compile(
+    rf"(?:€|\bEUR)\s?(?P<lead>{_AMOUNT})|(?<![\d.,])(?P<trail>{_AMOUNT})\s?(?:€|EUR\b)"
+)
 
 
 def is_price(sentence: str) -> bool:
     """A price sentence (METHOD, Changes): it contains "€", "EUR" or "euro"."""
     return bool(PRICE.search(sentence))
+
+
+def euro_cents(sentence: str) -> set[int]:
+    """The euro amounts a sentence states, in cents."""
+    out = set()
+    for m in EURO.finditer(sentence):
+        text = re.sub(r"[ \u00a0\u202f]", "", m["lead"] or m["trail"])
+        text = text.replace(",", ".") if re.fullmatch(r"\d+,\d{2}", text) else text.replace(",", "")
+        out.add(int(Decimal(text) * 100))
+    return out
+
+
+def offer_totals(offers: Iterable[Mapping[str, Any]]) -> set[int]:
+    """Each offer's price plus its shipping, in cents, where shipping is not free."""
+    return {o["price"] + o["shipping"] for o in offers if o["shipping"]}
 
 
 Row = tuple[str, Sequence[str], Sequence[bool], float | None]
@@ -156,6 +184,51 @@ def graders() -> dict[str, Any]:
     return out
 
 
+def read_checked(arm: str, gen: str) -> dict[str, dict[str, Any]]:
+    file = ck.path("battery", arm, gen)
+    return {r["qid"]: r for r in map(json.loads, file.read_text(encoding="utf-8").splitlines())}
+
+
+def totals_block(gen: str, grades: Mapping[tuple[str, str], str]) -> dict[str, Any] | None:
+    """Arm 2t against arm 2 (METHOD, Changes 2026-10-23): the sums gap and what came back, and
+    the wrong sentences arm 2t keeps that arm 2 removed."""
+    if not ck.path("battery", "claims76", gen).exists():
+        return None
+    rows = (ROOT / "battery/questions.jsonl").read_text(encoding="utf-8").splitlines()
+    offers = {q["qid"]: q["offers"] for q in map(json.loads, rows)}
+    two, two_t = read_checked("claims", gen), read_checked("claims76", gen)
+    gap, back, not_back, wrong_kept, right_lost = [], [], [], [], []
+    for qid, r in sorted(two.items()):
+        totals = offer_totals(offers[qid])
+        for i, s in enumerate(r["sentences"]):
+            before, after = r["verdicts"][i] == "EMIT", two_t[qid]["verdicts"][i] == "EMIT"
+            grade = grades.get((qid, s))
+            if grade == "yes" and not before and euro_cents(s) & totals:
+                gap.append(f"{qid}#{i}")
+                if after:
+                    back.append(f"{qid}#{i}")
+                else:
+                    not_back.append({"sentence": f"{qid}#{i}",
+                                     "reasons": two_t[qid]["reasons"][i],
+                                     "failed": two_t[qid]["failed"][i]})  # fmt: skip
+            if grade == "no" and after and not before:
+                wrong_kept.append(f"{qid}#{i}")
+            if grade == "yes" and before and not after:
+                right_lost.append(f"{qid}#{i}")
+    return {
+        "sums_gap": len(gap),
+        "recovered": len(back),
+        "not_recovered": not_back,
+        "wrong_newly_kept": wrong_kept,
+        "right_newly_removed": right_lost,
+        "verdicts_changed": sum(
+            a != b
+            for qid, r in two.items()
+            for a, b in zip(r["verdicts"], two_t[qid]["verdicts"], strict=True)
+        ),
+    }
+
+
 def report() -> dict[str, Any]:
     grades = final_grades()
     out: dict[str, Any] = {"hardware": HARDWARE, "arm1_judge": ARM1_JUDGE, "grading": graders(),
@@ -182,6 +255,9 @@ def report() -> dict[str, Any]:
         table["both"] = both
         if {"1 other model", "3 claim check then 1B"} <= set(both):
             table["reading_costs_less_for_same_safety"] = reading(both)
+        block = totals_block(gen, grades)
+        if block is not None:
+            table["totals"] = block
         out["generators"][gen] = table
     REPORT.write_text(json.dumps(out, indent=1) + "\n", encoding="utf-8")
     return out
