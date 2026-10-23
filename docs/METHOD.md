@@ -121,6 +121,7 @@ sentence is dropped, as in stop 71. The premise for every check is the question'
 | 2b | Claim check, 0.2.0, French half only | CPU |
 | 2t | Claim check with totals (`totals="line"`), verifier build `9ab6603` (stop 76, unreleased); added 2026-10-23, see Changes | CPU |
 | 3 | Claim check, then the stop 64 1B judge (`azterizm/minicpm5-1b-clause-judge`) on the sentences it passes | CPU, then one Modal L40S (SGLang) |
+| 3t | Claim check with totals (arm 2t), then the same 1B judge with `totals="line"`; added 2026-10-23, see Changes | CPU, then one Modal L40S (SGLang) |
 
 The 1B judge is used as published; it has never seen a product sentence, and is reported so.
 
@@ -235,4 +236,12 @@ about $1. Neither runs before your spend go.
   4.6: wrong kept 30 (12 prices), right removed 25, empty 2, against arm 2's 21 (3), 106, 9. The sums gap is 94,
   81 recovered; the other 13 are 12 type B value-swap rollbacks and a bare number. 9 wrong sentences newly kept,
   each a right total inside a wrong claim. Flash: right removed 11 (75), empty 1 (8), none wrong.
+- 2026-10-23, before any call (your go on Modal): **arm 3t, arm 3 on arm 2t.** The sentences arm 2t passes go to
+  the 1B judge exactly as in arm 3 (same merged weights, server, prompt, `STRICT_FIGURES`, one answer at a time),
+  with `totals="line"` added to the judge's config, so the verifier inside the container is the build `9ab6603`
+  (shipped from an environment holding only that build; the run stops if the container's config lacks
+  `totals="line"`). Dev first on Opus 4.6's 20 answers as the smoke run, then the battery once, both generators.
+  Time is arm 2t's claim check plus the container's judge time. Reported: the §8 row, the wrong sentences arm 3t
+  keeps that arm 3 removed, and the reading rule of §8 computed for 3t against arm 1 beside arm 3's, as
+  information: that rule was fixed for arm 3, not for 3t. Spend: about $0.25, under the ledger's $3 cap.
 
