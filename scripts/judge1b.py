@@ -14,7 +14,7 @@ Test 2's arms 4 and 4t (docs/METHOD2.md §6) run the same way with ``--judge run
 trained on product sentences (``scripts/test2_modal.py::train``); ``labels`` gives V1's labels:
 
   uv run --with modal modal run scripts/judge1b.py::run --split battery --model flash --judge run3
-  uv run --with modal modal run scripts/judge1b.py::labels --judge run3
+  uv run --with modal modal run scripts/judge1b.py::labels --tasks validation,fresh,fresh2
 
 Sends the listings, offers, questions and the sentences the claim check passed; returns labels.
 """
@@ -314,25 +314,37 @@ def run(
 
 
 @app.local_entrypoint()
-def labels(judge: str = "run3") -> None:
-    """Test 2's V1 (METHOD2 §6): the judge on the validation clauses' prompts, labels appended."""
+def labels(judge: str = "run3", tasks: str = "validation") -> None:
+    """Test 2's V1 and legal check (METHOD2 §6): the judge's labels on the validation clauses'
+    prompts and on the verifier's fresh tests' (``scripts/legal3.py``), appended per task."""
     ledger = _ledger()
     folder = ROOT / "results/raw/test2"
-    rows = (folder / "run3/validation.jsonl").read_text(encoding="utf-8").splitlines()
-    prompts = {r["sha"]: r["messages"][1]["content"] for r in map(json.loads, rows)}
-    out = folder / f"labels.{judge}.jsonl"
-    done = out.read_text(encoding="utf-8").splitlines() if out.exists() else []
-    have = {r["sha"] for r in map(json.loads, done)}
-    todo = {k: v for k, v in prompts.items() if k not in have}
-    print(f"{judge}: {len(todo)} validation prompts to label", flush=True)
-    if not todo:
-        return
-    ledger.check(GPU, 900, "test2")
-    t0 = time.time()
-    reply = Judge1B(judge=judge).labels.remote(todo)
-    seconds = max(reply["seconds"] + reply["startup"], time.time() - t0)
-    ledger.record(f"test2 labels {judge}", GPU, seconds, f"{len(reply['labels'])} prompts")
-    with out.open("a", encoding="utf-8") as f:
-        for sha, label in reply["labels"].items():
-            f.write(json.dumps({"sha": sha, **label}) + "\n")
-    print(f"{len(reply['labels'])} labels; Modal test2 ${ledger.spent('test2'):.2f}", flush=True)
+    server = Judge1B(judge=judge)
+    startup_recorded = False
+    for task in tasks.split(","):
+        if task == "validation":
+            rows = (folder / "run3/validation.jsonl").read_text(encoding="utf-8").splitlines()
+            prompts = {r["sha"]: r["messages"][1]["content"] for r in map(json.loads, rows)}
+            out = folder / f"labels.{judge}.jsonl"
+        else:
+            prompts = json.loads((folder / f"legal/{task}.prompts.json").read_text("utf-8"))
+            out = folder / f"legal/{task}.labels.{judge}.jsonl"
+        done = out.read_text(encoding="utf-8").splitlines() if out.exists() else []
+        have = {r["sha"] for r in map(json.loads, done)}
+        todo = {k: v for k, v in prompts.items() if k not in have}
+        print(f"{judge} {task}: {len(todo)} prompts to label", flush=True)
+        if not todo:
+            continue
+        ledger.check(GPU, 900, "test2")
+        t0 = time.time()
+        reply = server.labels.remote(todo)
+        seconds = reply["seconds"] + (0 if startup_recorded else reply["startup"])
+        startup_recorded = True
+        seconds = max(seconds, time.time() - t0)
+        ledger.record(f"test2 labels {judge} {task}", GPU, seconds, f"{len(reply['labels'])}")
+        with out.open("a", encoding="utf-8") as f:
+            for sha, label in reply["labels"].items():
+                f.write(json.dumps({"sha": sha, **label}) + "\n")
+        print(
+            f"{len(reply['labels'])} labels; Modal test2 ${ledger.spent('test2'):.2f}", flush=True
+        )
