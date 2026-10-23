@@ -154,3 +154,15 @@ def test_the_dev_check_compares_changed_with_expected() -> None:
     after = {"D09-en": {"verdicts": ["EMIT", "ROLLBACK", "EMIT"]}}
     diff = check.changes(reference, after, offers)
     assert diff == {"changed": [("D09-en", 0)], "expected": [("D09-en", 0)]}
+
+
+def test_the_reading_rule_for_arm_3t_reads_its_own_row() -> None:
+    from scripts import report  # noqa: PLC0415
+
+    arms = {
+        "1 other model": {"wrong_kept": 0, "right_removed": 94},
+        "3 claim check then 1B": {"wrong_kept": 5, "right_removed": 148},
+        "3t claim check with totals then 1B": {"wrong_kept": 2, "right_removed": 60},
+    }
+    assert not report.reading(arms)
+    assert report.reading(arms, "3t claim check with totals then 1B")

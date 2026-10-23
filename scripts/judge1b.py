@@ -4,10 +4,18 @@ it passes, the judge on one Modal L40S. Paid: run only on a go; Modal spend is c
   uv run --with modal modal run scripts/judge1b.py::merge                 # once: adapter into base
   uv run --with modal modal run scripts/judge1b.py::run --split battery --model flash
 
+Arm 3t (METHOD, Changes 2026-10-23) runs on arm 2t's verdicts with ``totals="line"``, from an
+environment that holds only the verifier's stop 76 build, so that build is what the container gets:
+
+  uv run --isolated --no-project --with modal \
+    --with "legal-rag-verifier @ git+file://<the verifier repo>@<check.TOTALS>" \
+    modal run scripts/judge1b.py::run --split battery --model flash --totals
+
 Sends the listings, offers, questions and the sentences the claim check passed; returns labels.
 """
 
 # No `from __future__ import annotations`: Modal reads function annotations at runtime.
+import dataclasses
 import json
 import subprocess
 import sys
@@ -156,9 +164,14 @@ class Judge1B:
                 name = label["label"] if label["label"] in jd.LABELS else "not_stated"
                 return list(jd.one_hot(name, int(label.get("passage") or 0), len(premises)))
 
+        def config(job: dict[str, Any]) -> Any:
+            if job.get("totals"):  # raises on a build without ``totals``
+                return dataclasses.replace(jd.STRICT_FIGURES, totals="line")
+            return jd.STRICT_FIGURES
+
         def one(job: dict[str, Any]) -> dict[str, Any]:
             scorer = OneB()
-            verifier = Verifier(scorer, jd.STRICT_FIGURES)
+            verifier = Verifier(scorer, config(job))
             premise = Premise.from_text(job["premise"])
             kept: list[str] = []
             verdicts = []
@@ -174,7 +187,7 @@ class Judge1B:
                     kept.append(sentence)
             seconds = round(time.perf_counter() - t0, 4)
             return {"qid": job["qid"], "verdicts": verdicts, "judge_seconds": seconds,
-                    "labels": scorer.labels}  # fmt: skip
+                    "labels": scorer.labels, "config": verifier.config.to_dict()}  # fmt: skip
 
         t0 = time.time()
         with ThreadPoolExecutor(WORKERS) as pool:
@@ -201,22 +214,27 @@ def merge() -> None:
 
 
 @app.local_entrypoint()
-def run(split: str = "battery", model: str = "flash") -> None:
+def run(split: str = "battery", model: str = "flash", totals: bool = False) -> None:  # noqa: FBT001, FBT002
     ledger = _ledger()
     sys.path.insert(0, str(ROOT / "src"))
     sys.path.insert(0, str(ROOT / "scripts"))
     import answer as an  # type: ignore[import-not-found]  # noqa: PLC0415
     import check as ck  # type: ignore[import-not-found]  # noqa: PLC0415
 
+    if totals:  # the build this environment holds is the one the container gets
+        from legal_rag_verifier.verifier import VerifierConfig  # noqa: PLC0415
+
+        VerifierConfig(totals="line")  # type: ignore[call-arg, unused-ignore]
     questions = {q.qid: q for q in an.sealed(split)}
-    rows = ck.path(split, "claims", model).read_text(encoding="utf-8").splitlines()
+    rows = ck.path(split, "claims76" if totals else "claims", model).read_text().splitlines()
     first = {r["qid"]: r for r in map(json.loads, rows)}
-    out = ck.path(split, "judge1b", model)
+    out = ck.path(split, "judge1b76" if totals else "judge1b", model)
+    arm = "arm 3t" if totals else "arm 3"
     done = out.read_text(encoding="utf-8").splitlines() if out.exists() else []
     have = {r["qid"] for r in map(json.loads, done)}
     jobs = [
         {"qid": qid, "premise": questions[qid].premise, "query": questions[qid].question,
-         "sentences": r["sentences"], "claims": r["verdicts"]}
+         "sentences": r["sentences"], "claims": r["verdicts"], "totals": totals}
         for qid, r in sorted(first.items()) if qid not in have
     ]  # fmt: skip
     print(f"{split} {model}: {len(jobs)} answers to check", flush=True)
@@ -226,10 +244,12 @@ def run(split: str = "battery", model: str = "flash") -> None:
         ledger.check(GPU, 900)
         t0 = time.time()
         reply = judge.check.remote(jobs[start : start + CHUNK])
+        if totals and any(r["config"].get("totals") != "line" for r in reply["results"]):
+            raise SystemExit("the container's verifier is not running totals")
         seconds = reply["seconds"] + (0 if startup_recorded else reply["startup"])
         startup_recorded = True
         ledger.record(
-            f"arm 3 {split} {model}",
+            f"{arm} {split} {model}",
             GPU,
             max(seconds, time.time() - t0),
             f"{len(reply['results'])} answers",

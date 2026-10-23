@@ -32,6 +32,7 @@ ARMS = {
     "2b claim check 0.2.0": "claims-020",
     "2t claim check with totals": "claims76",
     "3 claim check then 1B": "judge1b",
+    "3t claim check with totals then 1B": "judge1b76",
 }
 ARM1_JUDGE = {"opus46": "gemini-3.8-flash-high (router)", "flash": "qwen27-ar4 (one L40S)"}
 HARDWARE = {
@@ -40,6 +41,7 @@ HARDWARE = {
     "2b claim check 0.2.0": "CPU (Apple Mac)",
     "2t claim check with totals": "CPU (Apple Mac)",
     "3 claim check then 1B": "CPU, then one L40S",
+    "3t claim check with totals then 1B": "CPU, then one L40S",
 }
 PRICE = re.compile(r"€|\bEUR\b|euro", re.IGNORECASE)
 MARGIN = 2  # the reading rule: at most 2 more wrong sentences kept than arm 1
@@ -101,10 +103,10 @@ def tally(rows: Iterable[Row], grades: Mapping[tuple[str, str], str]) -> dict[st
     return out
 
 
-def reading(arms: Mapping[str, Mapping[str, Any]]) -> bool:
+def reading(arms: Mapping[str, Mapping[str, Any]], arm: str = "3 claim check then 1B") -> bool:
     """Arm 3 "costs less for the same safety": at most MARGIN more wrong kept than arm 1, and fewer
-    right removed."""
-    one, three = arms["1 other model"], arms["3 claim check then 1B"]
+    right removed. For arm 3t it is reported as information only (METHOD, Changes 2026-10-23)."""
+    one, three = arms["1 other model"], arms[arm]
     return bool(
         three["wrong_kept"] <= one["wrong_kept"] + MARGIN
         and three["right_removed"] < one["right_removed"]
@@ -139,7 +141,7 @@ def arm_rows(gen: str, arm: str | None, lang: str, *, price_only: bool = False) 
         out = []
         for r in map(json.loads, file.read_text(encoding="utf-8").splitlines()):
             added = r.get("check_seconds")
-            if arm == "judge1b":
+            if arm.startswith("judge1b"):
                 added = float(r["claim_seconds"]) + float(r["judge_seconds"])
             out.append((r["qid"], r["sentences"], [v == "EMIT" for v in r["verdicts"]], added))
     out = [o for o in out if o[0].endswith(f"-{lang}")]
@@ -255,6 +257,10 @@ def report() -> dict[str, Any]:
         table["both"] = both
         if {"1 other model", "3 claim check then 1B"} <= set(both):
             table["reading_costs_less_for_same_safety"] = reading(both)
+        if {"1 other model", "3t claim check with totals then 1B"} <= set(both):
+            table["reading_for_3t_information_only"] = reading(
+                both, "3t claim check with totals then 1B"
+            )
         block = totals_block(gen, grades)
         if block is not None:
             table["totals"] = block
