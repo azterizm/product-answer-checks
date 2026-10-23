@@ -1,0 +1,37 @@
+{
+ "legal": {
+  "file": "legal-rag-verifier results/distill/students/train.jsonl",
+  "sha256": "c5ab5f0e243c5906f42a29032dddd00e76159a96c9a3b6d712980001b588a4aa",
+  "clauses": 18152,
+  "prompt_characters": 76478800
+ },
+ "product": {
+  "train": 2670,
+  "validation": 275,
+  "prompt_characters": 6561064
+ },
+ "plan": {
+  "epochs": 2,
+  "product_copies": 2,
+  "estimate_seconds": 2194,
+  "estimate_usd": 2.77,
+  "stop_seconds": 2971
+ },
+ "train_file_sha256": "d3c274ad63e5511bf9bb48cc0da03725969f3a42a2556d2cede669be2aa230bf",
+ "left out: wrong, several clauses": 8,
+ "repeated prompt": 68,
+ "sentences flash": 1897,
+ "sentences qwen7b": 1205,
+ "sentences the claim check rolls back": 83,
+ "train contradicted": 218,
+ "train contradicted flash": 1,
+ "train contradicted qwen7b": 217,
+ "train supported": 2452,
+ "train supported flash": 1682,
+ "train supported qwen7b": 770,
+ "validation contradicted": 20,
+ "validation contradicted qwen7b": 20,
+ "validation supported": 255,
+ "validation supported flash": 176,
+ "validation supported qwen7b": 79
+}
