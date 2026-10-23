@@ -167,3 +167,11 @@ def test_the_reading_rule_for_arm_3t_reads_its_own_row() -> None:
     }
     assert not report.reading(arms)
     assert report.reading(arms, "3t claim check with totals then 1B")
+
+
+def test_r2_uses_an_exact_two_sided_sign_test() -> None:
+    from scripts import report  # noqa: PLC0415
+
+    assert report.sign_test(0, 0) == 1.0
+    assert report.sign_test(5, 0) == 0.0625
+    assert report.sign_test(20, 7) == report.sign_test(7, 20) == 0.0192

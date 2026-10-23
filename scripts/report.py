@@ -1,5 +1,6 @@
 """Test 1's report (docs/METHOD.md §8): per generator, half and arm, the wrong sentences kept, the
 right sentences removed, empty answers and seconds added; price sentences apart; the reading rule.
+Test 2's arms 4 and 4t (docs/METHOD2.md §6) are read on the same answers and grades: R1 and R2.
 
   uv run python scripts/report.py     # → results/report.json (counts only)
 """
@@ -8,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 import re
 import statistics
 import sys
@@ -33,6 +35,8 @@ ARMS = {
     "2t claim check with totals": "claims76",
     "3 claim check then 1B": "judge1b",
     "3t claim check with totals then 1B": "judge1b76",
+    "4 claim check then product-trained 1B": "judge1b-run3",
+    "4t claim check with totals then product-trained 1B": "judge1b76-run3",
 }
 ARM1_JUDGE = {"opus46": "gemini-3.8-flash-high (router)", "flash": "qwen27-ar4 (one L40S)"}
 HARDWARE = {
@@ -42,7 +46,10 @@ HARDWARE = {
     "2t claim check with totals": "CPU (Apple Mac)",
     "3 claim check then 1B": "CPU, then one L40S",
     "3t claim check with totals then 1B": "CPU, then one L40S",
+    "4 claim check then product-trained 1B": "CPU, then one L40S",
+    "4t claim check with totals then product-trained 1B": "CPU, then one L40S",
 }
+ARM_4T = "4t claim check with totals then product-trained 1B"
 PRICE = re.compile(r"€|\bEUR\b|euro", re.IGNORECASE)
 MARGIN = 2  # the reading rule: at most 2 more wrong sentences kept than arm 1
 # A euro amount as the answers write it, read here and not by the checker (METHOD, Changes
@@ -231,6 +238,37 @@ def totals_block(gen: str, grades: Mapping[tuple[str, str], str]) -> dict[str, A
     }
 
 
+def sign_test(only_a: int, only_b: int) -> float:
+    """Exact two-sided sign test on the sentences only one of two arms gets right."""
+    n = only_a + only_b
+    if n == 0:
+        return 1.0
+    tail = sum(math.comb(n, k) for k in range(min(only_a, only_b) + 1)) / 2.0**n
+    return round(min(1.0, 2 * tail), 4)
+
+
+def against_3t(gen: str, grades: Mapping[tuple[str, str], str]) -> dict[str, Any] | None:
+    """R2 (METHOD2 §6): 4t against 3t, the right sentences only one of them removes."""
+    if not ck.path("battery", "judge1b76-run3", gen).exists():
+        return None
+    four, three = read_checked("judge1b76-run3", gen), read_checked("judge1b76", gen)
+    only_4t, only_3t = [], []
+    for qid, r in sorted(three.items()):
+        for i, s in enumerate(r["sentences"]):
+            if grades.get((qid, s)) != "yes":
+                continue
+            kept_3t, kept_4t = r["verdicts"][i] == "EMIT", four[qid]["verdicts"][i] == "EMIT"
+            if kept_3t and not kept_4t:
+                only_4t.append(f"{qid}#{i}")
+            if kept_4t and not kept_3t:
+                only_3t.append(f"{qid}#{i}")
+    return {
+        "right_removed_only_by_4t": only_4t,
+        "right_removed_only_by_3t": len(only_3t),
+        "sign_test_p": sign_test(len(only_4t), len(only_3t)),
+    }
+
+
 def report() -> dict[str, Any]:
     grades = final_grades()
     out: dict[str, Any] = {"hardware": HARDWARE, "arm1_judge": ARM1_JUDGE, "grading": graders(),
@@ -261,6 +299,11 @@ def report() -> dict[str, Any]:
             table["reading_for_3t_information_only"] = reading(
                 both, "3t claim check with totals then 1B"
             )
+        if {"1 other model", ARM_4T} <= set(both):
+            table["test2_R1_4t_costs_less_for_same_safety"] = reading(both, ARM_4T)
+        r2 = against_3t(gen, grades)
+        if r2 is not None:
+            table["test2_R2_4t_against_3t"] = r2
         block = totals_block(gen, grades)
         if block is not None:
             table["totals"] = block
