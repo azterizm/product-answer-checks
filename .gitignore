@@ -30,3 +30,6 @@ docs/ROADMAP.md
 
 # Router key (when kept here)
 .router_key
+
+# Trained adapters, downloaded from Modal (published on Hugging Face, not in git)
+artefacts/

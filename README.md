@@ -140,6 +140,9 @@ The `battery` folder holds the product IDs, offers, questions, prompt and a hash
   included. Each user downloads it with their own account.
 - Test 2 trains on made-up listings only. The Open Content Licence (version 1.4, §10) does not permit machine
   learning training on Open Icecat content.
+- The product-trained 1B model is published as `run3` at
+  [huggingface.co/azterizm/minicpm5-1b-clause-judge](https://huggingface.co/azterizm/minicpm5-1b-clause-judge),
+  Apache-2.0.
 - Code, offers and questions: [AGPL-3.0](LICENSE).
 - Claim check: [legal-rag-verifier](https://github.com/azterizm/legal-rag-verifier) 0.3.0; the totals rows
   0.4.0.

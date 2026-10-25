@@ -164,3 +164,11 @@ speed?** This answers DataSnipper's own line, fine-tuning models to reduce laten
     sentences of several clauses left out, 83 rolled back by the claim check. `test2/dataset.json`.
   - Spend: Modal $4.55 of the $5 cap (7B answers $0.14, training $3.49, merge $0.04, labels $0.50 with the lost
     call, arms $0.38). Router: Flash 886 answers and 886 grading calls, no charge.
+
+- **2026-10-25, published, your go.** `run3` is in `azterizm/minicpm5-1b-clause-judge` beside `run1` and `run2`
+  (Hub commit `31eb059`): the adapter, its config and its training history; sha256 of the adapter
+  `286949af8d6d3ef6e086c222ac21942c006648cc654fc8333be0076f6878088e`. Before the upload, the adapter downloaded
+  from Modal and loaded on this machine as the model card shows (float32, CPU) gave the same label and passage
+  as the merged model on Modal on all 275 validation clauses. After it, the Hub's hashes of `run1` and `run2`
+  were unchanged and `run3` downloaded without a token. The model card gained `run3`'s data, results and
+  limits; the DOI stays registered for revision `55f64fb`, which holds `run1` and `run2` only.
