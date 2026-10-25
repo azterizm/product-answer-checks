@@ -325,6 +325,7 @@ def _local() -> tuple[Any, Any, Any]:
     sys.path[:0] = [str(ROOT / "src"), str(ROOT / "scripts")]
     import answer as an  # type: ignore[import-not-found]  # noqa: PLC0415
     import modal_ledger  # type: ignore[import-not-found]  # noqa: PLC0415
+
     import test2  # type: ignore[import-not-found]  # noqa: PLC0415
 
     return modal_ledger, an, test2
@@ -364,7 +365,9 @@ def answers(limit: int = 0) -> None:
 
 @app.local_entrypoint()
 def train(run: str = "run3") -> None:
-    """Upload the training file ``dataset`` wrote, train as its plan says, merge. Ledgered."""
+    """Upload the training file ``dataset`` wrote, train as its plan says, merge. Ledgered. A
+    rerun resumes from the last checkpoint, skips an upload the volume already holds, and stops
+    at the training time left under METHOD2's limit (the ledger's earlier training calls)."""
     ledger, _, t2 = _local()
     summary = json.loads((t2.COMMITTED / "dataset.json").read_text(encoding="utf-8"))
     plan = summary["plan"]
@@ -374,13 +377,21 @@ def train(run: str = "run3") -> None:
         != summary["train_file_sha256"]
     ):
         raise SystemExit("the training file is not the one test2/dataset.json describes")
-    ledger.check("H100", plan["estimate_seconds"] + 600, STAGE)
-    with runs.batch_upload(force=True) as batch:
-        for split in ("train", "validation"):
-            batch.put_file(str(folder / f"{split}.jsonl"), f"/test2/data/{split}.jsonl")
+    used = sum(e["seconds"] for e in ledger.entries() if e["run"] == f"{STAGE} train {run}")
+    left = plan["stop_seconds"] - used
+    if left <= 0:
+        raise SystemExit(f"the training time under METHOD2's limit is spent ({used:.0f} s)")
+    ledger.check("H100", (left if used else plan["estimate_seconds"]) + 600, STAGE)
+    held = {Path(e.path).name: e.size for e in runs.listdir("/test2/data")} if used else {}
+    files = {split: folder / f"{split}.jsonl" for split in ("train", "validation")}
+    if any(held.get(f.name) != f.stat().st_size for f in files.values()):
+        with runs.batch_upload(force=True) as batch:
+            for split, f in files.items():
+                batch.put_file(str(f), f"/test2/data/{split}.jsonl")
+    print(f"training: {used:.0f} s used before, stops after {left:.0f} s", flush=True)
     t0 = time.time()
     try:
-        out = train_small.remote(plan["epochs"], run=run, budget_seconds=plan["stop_seconds"])
+        out = train_small.remote(plan["epochs"], run=run, budget_seconds=left)
     finally:
         ledger.record(f"{STAGE} train {run}", "H100", time.time() - t0)
     (folder / "train_result.json").write_text(json.dumps(out, indent=1) + "\n", encoding="utf-8")
