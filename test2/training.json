@@ -1,0 +1,25 @@
+{
+ "base": "openbmb/MiniCPM5-1B@87179e5c1f455ef22e6223592d2d61351b525bfc",
+ "examples": 23492,
+ "dropped_over_max_tokens": 0,
+ "longest_tokens": 6098,
+ "batches": 2190,
+ "updates": 1096,
+ "training_loss_of_the_resumed_call": 0.0617,
+ "calls": [
+  {
+   "seconds": 1564.8,
+   "usd": 1.9745,
+   "ended": "client lost at update 523 of 1,096; checkpoint 500 kept"
+  },
+  {
+   "seconds": 1197.5,
+   "usd": 1.511,
+   "ended": "resumed from checkpoint 500, finished; budget stop not reached"
+  }
+ ],
+ "training_seconds": 2762.3,
+ "limit_seconds": 2971,
+ "merge_usd": 0.0424,
+ "merged": "/runs/minicpm5-1b/run3/merged (Modal volume product-answer-checks-runs)"
+}

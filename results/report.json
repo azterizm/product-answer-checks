@@ -5,7 +5,9 @@
   "2b claim check 0.2.0": "CPU (Apple Mac)",
   "2t claim check with totals": "CPU (Apple Mac)",
   "3 claim check then 1B": "CPU, then one L40S",
-  "3t claim check with totals then 1B": "CPU, then one L40S"
+  "3t claim check with totals then 1B": "CPU, then one L40S",
+  "4 claim check then product-trained 1B": "CPU, then one L40S",
+  "4t claim check with totals then product-trained 1B": "CPU, then one L40S"
  },
  "arm1_judge": {
   "opus46": "gemini-3.8-flash-high (router)",
@@ -122,6 +124,30 @@
      "unsettled_removed": 0,
      "empty": 9,
      "seconds_added_median": 0.1453
+    },
+    "4 claim check then product-trained 1B": {
+     "answers": 60,
+     "sentences": 129,
+     "wrong_kept": 0,
+     "right_removed": 46,
+     "wrong_removed": 0,
+     "right_kept": 83,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 10,
+     "seconds_added_median": 0.1308
+    },
+    "4t claim check with totals then product-trained 1B": {
+     "answers": 60,
+     "sentences": 129,
+     "wrong_kept": 0,
+     "right_removed": 27,
+     "wrong_removed": 0,
+     "right_kept": 102,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 4,
+     "seconds_added_median": 0.1436
     }
    },
    "fr price": {
@@ -201,6 +227,28 @@
      "unsettled_kept": 0,
      "unsettled_removed": 0,
      "seconds_added_median": 0.1453
+    },
+    "4 claim check then product-trained 1B": {
+     "answers": 60,
+     "sentences": 48,
+     "wrong_kept": 0,
+     "right_removed": 39,
+     "wrong_removed": 0,
+     "right_kept": 9,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "seconds_added_median": 0.1308
+    },
+    "4t claim check with totals then product-trained 1B": {
+     "answers": 60,
+     "sentences": 48,
+     "wrong_kept": 0,
+     "right_removed": 21,
+     "wrong_removed": 0,
+     "right_kept": 27,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "seconds_added_median": 0.1436
     }
    },
    "en all": {
@@ -275,6 +323,30 @@
      "unsettled_removed": 0,
      "empty": 10,
      "seconds_added_median": 0.1418
+    },
+    "4 claim check then product-trained 1B": {
+     "answers": 60,
+     "sentences": 133,
+     "wrong_kept": 0,
+     "right_removed": 47,
+     "wrong_removed": 0,
+     "right_kept": 86,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 8,
+     "seconds_added_median": 0.1245
+    },
+    "4t claim check with totals then product-trained 1B": {
+     "answers": 60,
+     "sentences": 133,
+     "wrong_kept": 0,
+     "right_removed": 25,
+     "wrong_removed": 0,
+     "right_kept": 108,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 4,
+     "seconds_added_median": 0.1455
     }
    },
    "en price": {
@@ -343,6 +415,28 @@
      "unsettled_kept": 0,
      "unsettled_removed": 0,
      "seconds_added_median": 0.1418
+    },
+    "4 claim check then product-trained 1B": {
+     "answers": 60,
+     "sentences": 53,
+     "wrong_kept": 0,
+     "right_removed": 41,
+     "wrong_removed": 0,
+     "right_kept": 12,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "seconds_added_median": 0.1245
+    },
+    "4t claim check with totals then product-trained 1B": {
+     "answers": 60,
+     "sentences": 53,
+     "wrong_kept": 0,
+     "right_removed": 19,
+     "wrong_removed": 0,
+     "right_kept": 34,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "seconds_added_median": 0.1455
     }
    },
    "both": {
@@ -417,10 +511,44 @@
      "unsettled_removed": 0,
      "empty": 19,
      "seconds_added_median": 0.1433
+    },
+    "4 claim check then product-trained 1B": {
+     "answers": 120,
+     "sentences": 262,
+     "wrong_kept": 0,
+     "right_removed": 93,
+     "wrong_removed": 0,
+     "right_kept": 169,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 18,
+     "seconds_added_median": 0.1277
+    },
+    "4t claim check with totals then product-trained 1B": {
+     "answers": 120,
+     "sentences": 262,
+     "wrong_kept": 0,
+     "right_removed": 52,
+     "wrong_removed": 0,
+     "right_kept": 210,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 8,
+     "seconds_added_median": 0.1446
     }
    },
    "reading_costs_less_for_same_safety": false,
    "reading_for_3t_information_only": false,
+   "test2_R1_4t_costs_less_for_same_safety": true,
+   "test2_R2_4t_against_3t": {
+    "right_removed_only_by_4t": [
+     "B04-en#1",
+     "B11-en#0",
+     "B11-fr#0"
+    ],
+    "right_removed_only_by_3t": 38,
+    "sign_test_p": 1.05e-08
+   },
    "totals": {
     "sums_gap": 72,
     "recovered": 64,
@@ -598,6 +726,30 @@
      "unsettled_removed": 0,
      "empty": 9,
      "seconds_added_median": 0.195
+    },
+    "4 claim check then product-trained 1B": {
+     "answers": 60,
+     "sentences": 142,
+     "wrong_kept": 5,
+     "right_removed": 64,
+     "wrong_removed": 10,
+     "right_kept": 63,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 12,
+     "seconds_added_median": 0.1268
+    },
+    "4t claim check with totals then product-trained 1B": {
+     "answers": 60,
+     "sentences": 142,
+     "wrong_kept": 8,
+     "right_removed": 35,
+     "wrong_removed": 7,
+     "right_kept": 92,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 7,
+     "seconds_added_median": 0.1876
     }
    },
    "fr price": {
@@ -677,6 +829,28 @@
      "unsettled_kept": 0,
      "unsettled_removed": 0,
      "seconds_added_median": 0.195
+    },
+    "4 claim check then product-trained 1B": {
+     "answers": 60,
+     "sentences": 77,
+     "wrong_kept": 1,
+     "right_removed": 54,
+     "wrong_removed": 9,
+     "right_kept": 13,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "seconds_added_median": 0.1268
+    },
+    "4t claim check with totals then product-trained 1B": {
+     "answers": 60,
+     "sentences": 77,
+     "wrong_kept": 4,
+     "right_removed": 25,
+     "wrong_removed": 6,
+     "right_kept": 42,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "seconds_added_median": 0.1876
     }
    },
    "en all": {
@@ -751,6 +925,30 @@
      "unsettled_removed": 0,
      "empty": 12,
      "seconds_added_median": 0.1863
+    },
+    "4 claim check then product-trained 1B": {
+     "answers": 60,
+     "sentences": 146,
+     "wrong_kept": 9,
+     "right_removed": 66,
+     "wrong_removed": 8,
+     "right_kept": 63,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 7,
+     "seconds_added_median": 0.1167
+    },
+    "4t claim check with totals then product-trained 1B": {
+     "answers": 60,
+     "sentences": 146,
+     "wrong_kept": 12,
+     "right_removed": 33,
+     "wrong_removed": 5,
+     "right_kept": 96,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 4,
+     "seconds_added_median": 0.1853
     }
    },
    "en price": {
@@ -819,6 +1017,28 @@
      "unsettled_kept": 0,
      "unsettled_removed": 0,
      "seconds_added_median": 0.1863
+    },
+    "4 claim check then product-trained 1B": {
+     "answers": 60,
+     "sentences": 74,
+     "wrong_kept": 0,
+     "right_removed": 61,
+     "wrong_removed": 3,
+     "right_kept": 10,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "seconds_added_median": 0.1167
+    },
+    "4t claim check with totals then product-trained 1B": {
+     "answers": 60,
+     "sentences": 74,
+     "wrong_kept": 3,
+     "right_removed": 28,
+     "wrong_removed": 0,
+     "right_kept": 43,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "seconds_added_median": 0.1853
     }
    },
    "both": {
@@ -893,10 +1113,43 @@
      "unsettled_removed": 0,
      "empty": 21,
      "seconds_added_median": 0.1938
+    },
+    "4 claim check then product-trained 1B": {
+     "answers": 120,
+     "sentences": 288,
+     "wrong_kept": 14,
+     "right_removed": 130,
+     "wrong_removed": 18,
+     "right_kept": 126,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 19,
+     "seconds_added_median": 0.121
+    },
+    "4t claim check with totals then product-trained 1B": {
+     "answers": 120,
+     "sentences": 288,
+     "wrong_kept": 20,
+     "right_removed": 68,
+     "wrong_removed": 12,
+     "right_kept": 188,
+     "unsettled_kept": 0,
+     "unsettled_removed": 0,
+     "empty": 11,
+     "seconds_added_median": 0.1867
     }
    },
    "reading_costs_less_for_same_safety": false,
    "reading_for_3t_information_only": false,
+   "test2_R1_4t_costs_less_for_same_safety": false,
+   "test2_R2_4t_against_3t": {
+    "right_removed_only_by_4t": [
+     "B01-fr#2",
+     "B09-fr#2"
+    ],
+    "right_removed_only_by_3t": 48,
+    "sign_test_p": 2.27e-12
+   },
    "totals": {
     "sums_gap": 94,
     "recovered": 81,

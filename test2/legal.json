@@ -1,0 +1,44 @@
+{
+ "fresh": {
+  "sentences": 354,
+  "prompts": 360,
+  "run2": {
+   "accuracy": 0.89,
+   "false_rollbacks": 16,
+   "caught": 125,
+   "labelled": 360
+  },
+  "run3": {
+   "accuracy": 0.873,
+   "false_rollbacks": 19,
+   "caught": 122,
+   "labelled": 360
+  },
+  "run3_against_run2": {
+   "only_first": 4,
+   "only_second": 10,
+   "p": 0.18
+  }
+ },
+ "fresh2": {
+  "sentences": 151,
+  "prompts": 153,
+  "run2": {
+   "accuracy": 0.821,
+   "false_rollbacks": 15,
+   "caught": 55,
+   "labelled": 153
+  },
+  "run3": {
+   "accuracy": 0.834,
+   "false_rollbacks": 13,
+   "caught": 55,
+   "labelled": 153
+  },
+  "run3_against_run2": {
+   "only_first": 3,
+   "only_second": 1,
+   "p": 0.625
+  }
+ }
+}

@@ -244,7 +244,7 @@ def sign_test(only_a: int, only_b: int) -> float:
     if n == 0:
         return 1.0
     tail = sum(math.comb(n, k) for k in range(min(only_a, only_b) + 1)) / 2.0**n
-    return round(min(1.0, 2 * tail), 4)
+    return float(f"{min(1.0, 2 * tail):.3g}")
 
 
 def against_3t(gen: str, grades: Mapping[tuple[str, str], str]) -> dict[str, Any] | None:

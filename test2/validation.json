@@ -1,0 +1,31 @@
+{
+ "validation_clauses": 275,
+ "teacher": {
+  "supported": 255,
+  "contradicted": 20
+ },
+ "run2": {
+  "labelled": 275,
+  "same_label": 230,
+  "labels": {
+   "supported": 240,
+   "contradicted": 35
+  },
+  "differ": {
+   "teacher supported / judge contradicted": 30,
+   "teacher contradicted / judge supported": 15
+  }
+ },
+ "run3": {
+  "labelled": 275,
+  "same_label": 266,
+  "labels": {
+   "supported": 260,
+   "contradicted": 15
+  },
+  "differ": {
+   "teacher contradicted / judge supported": 7,
+   "teacher supported / judge contradicted": 2
+  }
+ }
+}
