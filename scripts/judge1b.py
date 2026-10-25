@@ -281,7 +281,7 @@ def run(
     server = Judge1B(judge=judge)
     startup_recorded = False
     for start in range(0, len(jobs), CHUNK):
-        ledger.check(GPU, 900, stage)
+        ledger.check(GPU, 300 if stage else 900, stage)  # a test 2 call: under 3 minutes
         t0 = time.time()
         try:
             reply = server.check.remote(jobs[start : start + CHUNK])
@@ -339,7 +339,7 @@ def labels(judge: str = "run3", tasks: str = "validation") -> None:
         print(f"{judge} {task}: {len(todo)} prompts to label", flush=True)
         if not todo:
             continue
-        ledger.check(GPU, 900, "test2")
+        ledger.check(GPU, 300, "test2")  # a call with start-up: under 3 minutes
         t0 = time.time()
         try:
             reply = server.labels.remote(todo)
