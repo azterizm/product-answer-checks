@@ -283,7 +283,11 @@ def run(
     for start in range(0, len(jobs), CHUNK):
         ledger.check(GPU, 900, stage)
         t0 = time.time()
-        reply = server.check.remote(jobs[start : start + CHUNK])
+        try:
+            reply = server.check.remote(jobs[start : start + CHUNK])
+        except BaseException:  # a lost client still used the GPU: recorded, then raised
+            ledger.record(f"{arm} {split} {model}", GPU, time.time() - t0, "failed")
+            raise
         if totals and any(r["config"].get("totals") != "line" for r in reply["results"]):
             raise SystemExit("the container's verifier is not running totals")
         seconds = reply["seconds"] + (0 if startup_recorded else reply["startup"])
@@ -337,7 +341,11 @@ def labels(judge: str = "run3", tasks: str = "validation") -> None:
             continue
         ledger.check(GPU, 900, "test2")
         t0 = time.time()
-        reply = server.labels.remote(todo)
+        try:
+            reply = server.labels.remote(todo)
+        except BaseException:  # a lost client still used the GPU: recorded, then raised
+            ledger.record(f"test2 labels {judge} {task}", GPU, time.time() - t0, "failed")
+            raise
         seconds = reply["seconds"] + (0 if startup_recorded else reply["startup"])
         startup_recorded = True
         seconds = max(seconds, time.time() - t0)
